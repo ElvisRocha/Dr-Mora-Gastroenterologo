@@ -1,0 +1,85 @@
+{
+  "name": "Gastro Kids · Disponibilidad (GHL Free Slots)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "disponibilidad",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook · disponibilidad",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "gastrokids-disponibilidad"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construye rango startDate/endDate (UTC ms) para el día solicitado\nconst body = $input.first().json.body ?? $input.first().json;\nconst fecha = body.fecha; // 'YYYY-MM-DD'\nconst tz = body.timezone || 'America/Mexico_City';\nconst servicioSlug = body.servicio_slug;\n\nconst start = new Date(`${fecha}T00:00:00${tzOffset(tz)}`).getTime();\nconst end = new Date(`${fecha}T23:59:59${tzOffset(tz)}`).getTime();\n\nfunction tzOffset() { return '-06:00'; }\n\nreturn [{\n  json: {\n    fecha,\n    servicio_slug: servicioSlug,\n    timezone: tz,\n    start_ms: start,\n    end_ms: end\n  }\n}];"
+      },
+      "id": "2",
+      "name": "Preparar Rango",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://services.leadconnectorhq.com/calendars/REEMPLAZAR_CON_TU_GHL_CALENDAR_ID/free-slots?startDate={{$json.start_ms}}&endDate={{$json.end_ms}}&timezone={{$json.timezone}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-04-15" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3",
+      "name": "GHL · Free Slots",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ghl-api-key",
+          "name": "GHL Private API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filtra y normaliza slots a HH:mm en zona local del consultorio\nconst raw = $input.first().json;\nconst tz = $('Preparar Rango').first().json.timezone;\nconst fecha = $('Preparar Rango').first().json.fecha;\n\nconst slotsEntrada = raw[Object.keys(raw)[0]]?.slots ?? raw.slots ?? [];\n\nconst toLocal = (iso) => new Intl.DateTimeFormat('es-MX', {\n  hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz\n}).format(new Date(iso));\n\nconst out = slotsEntrada.map(s => ({\n  start: `${fecha}T${toLocal(s)}:00`,\n  end: `${fecha}T${toLocal(s)}:00`\n}));\n\nreturn [{ json: { slots: out } }];"
+      },
+      "id": "4",
+      "name": "Normalizar Slots",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}"
+      },
+      "id": "5",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1120, 300]
+    }
+  ],
+  "connections": {
+    "Webhook · disponibilidad": { "main": [[{ "node": "Preparar Rango", "type": "main", "index": 0 }]] },
+    "Preparar Rango": { "main": [[{ "node": "GHL · Free Slots", "type": "main", "index": 0 }]] },
+    "GHL · Free Slots": { "main": [[{ "node": "Normalizar Slots", "type": "main", "index": 0 }]] },
+    "Normalizar Slots": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": ["gastro-kids", "ghl"]
+}

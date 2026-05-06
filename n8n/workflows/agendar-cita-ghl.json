@@ -1,0 +1,257 @@
+{
+  "name": "Gastro Kids · Agendar Cita (GHL + Supabase)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agendar-cita",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook · agendar-cita",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "webhookId": "gastrokids-agendar-cita"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normaliza payload entrante del frontend\nconst body = $input.first().json.body ?? $input.first().json;\nconst tutor = body.tutor || {};\nconst paciente = body.paciente || {};\n\nreturn [{\n  json: {\n    servicio_slug: body.servicioSlug,\n    fecha: body.fecha,\n    hora: body.hora,\n    fecha_hora: `${body.fecha}T${body.hora}:00`,\n    motivo: body.motivo || '',\n    tutor: {\n      nombre: tutor.nombre,\n      apellidos: tutor.apellidos,\n      email: (tutor.email || '').toLowerCase().trim(),\n      telefono: (tutor.telefono || '').replace(/[^0-9+]/g, ''),\n      relacion: tutor.relacion\n    },\n    paciente: {\n      nombre: paciente.nombre,\n      apellido_paterno: paciente.apellidoPaterno,\n      apellido_materno: paciente.apellidoMaterno || null,\n      fecha_nacimiento: paciente.fechaNacimiento,\n      sexo: paciente.sexo\n    }\n  }\n}];"
+      },
+      "id": "2",
+      "name": "Preparar Datos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/contacts/upsert",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-07-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"locationId\": \"REEMPLAZAR_CON_TU_GHL_LOCATION_ID\",\n  \"firstName\": \"{{$json.tutor.nombre}}\",\n  \"lastName\": \"{{$json.tutor.apellidos}}\",\n  \"email\": \"{{$json.tutor.email}}\",\n  \"phone\": \"{{$json.tutor.telefono}}\",\n  \"customFields\": [\n    {\"key\": \"nino_nombre\", \"field_value\": \"{{$json.paciente.nombre}} {{$json.paciente.apellido_paterno}}\"},\n    {\"key\": \"nino_fecha_nacimiento\", \"field_value\": \"{{$json.paciente.fecha_nacimiento}}\"},\n    {\"key\": \"relacion\", \"field_value\": \"{{$json.tutor.relacion}}\"}\n  ]\n}",
+        "options": {}
+      },
+      "id": "3",
+      "name": "GHL · Upsert Contacto",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ghl-api-key",
+          "name": "GHL Private API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "table": "pacientes",
+        "operation": "upsert",
+        "filters": {
+          "values": [{ "name": "ghl_contact_id", "value": "={{$json.contact.id}}" }]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "nombre", "fieldValue": "={{$('Preparar Datos').first().json.paciente.nombre}}" },
+            { "fieldId": "apellido_paterno", "fieldValue": "={{$('Preparar Datos').first().json.paciente.apellido_paterno}}" },
+            { "fieldId": "apellido_materno", "fieldValue": "={{$('Preparar Datos').first().json.paciente.apellido_materno}}" },
+            { "fieldId": "fecha_nacimiento", "fieldValue": "={{$('Preparar Datos').first().json.paciente.fecha_nacimiento}}" },
+            { "fieldId": "sexo", "fieldValue": "={{$('Preparar Datos').first().json.paciente.sexo}}" },
+            { "fieldId": "ghl_contact_id", "fieldValue": "={{$json.contact.id}}" }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Supabase · Upsert Paciente",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [900, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-service-role",
+          "name": "Supabase Gastro Kids"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "table": "tutores",
+        "operation": "upsert",
+        "filters": {
+          "values": [{ "name": "email", "value": "={{$('Preparar Datos').first().json.tutor.email}}" }]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "paciente_id", "fieldValue": "={{$json.id}}" },
+            { "fieldId": "relacion", "fieldValue": "={{$('Preparar Datos').first().json.tutor.relacion}}" },
+            { "fieldId": "nombre", "fieldValue": "={{$('Preparar Datos').first().json.tutor.nombre}}" },
+            { "fieldId": "apellidos", "fieldValue": "={{$('Preparar Datos').first().json.tutor.apellidos}}" },
+            { "fieldId": "telefono", "fieldValue": "={{$('Preparar Datos').first().json.tutor.telefono}}" },
+            { "fieldId": "email", "fieldValue": "={{$('Preparar Datos').first().json.tutor.email}}" },
+            { "fieldId": "es_contacto_principal", "fieldValue": "true" }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Supabase · Upsert Tutor",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-service-role",
+          "name": "Supabase Gastro Kids"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/calendars/events/appointments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-04-15" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"calendarId\": \"REEMPLAZAR_CON_TU_GHL_CALENDAR_ID\",\n  \"locationId\": \"REEMPLAZAR_CON_TU_GHL_LOCATION_ID\",\n  \"contactId\": \"{{$('GHL · Upsert Contacto').first().json.contact.id}}\",\n  \"startTime\": \"{{$('Preparar Datos').first().json.fecha_hora}}\",\n  \"title\": \"Gastro Kids · {{$('Preparar Datos').first().json.servicio_slug}} · {{$('Preparar Datos').first().json.paciente.nombre}}\",\n  \"appointmentStatus\": \"confirmed\"\n}",
+        "options": {}
+      },
+      "id": "6",
+      "name": "GHL · Crear Cita",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1340, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ghl-api-key",
+          "name": "GHL Private API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "table": "citas",
+        "operation": "create",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "paciente_id", "fieldValue": "={{$('Supabase · Upsert Paciente').first().json.id}}" },
+            { "fieldId": "fecha_hora", "fieldValue": "={{$('Preparar Datos').first().json.fecha_hora}}" },
+            { "fieldId": "estado", "fieldValue": "agendada" },
+            { "fieldId": "ghl_appointment_id", "fieldValue": "={{$json.id}}" },
+            { "fieldId": "notas", "fieldValue": "={{$('Preparar Datos').first().json.motivo}}" }
+          ]
+        }
+      },
+      "id": "7",
+      "name": "Supabase · Insert Cita",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1560, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-service-role",
+          "name": "Supabase Gastro Kids"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "no-reply@gastrokids.mx",
+        "toEmail": "={{$('Preparar Datos').first().json.tutor.email}}",
+        "subject": "Confirmación de cita · Gastro Kids",
+        "emailType": "html",
+        "message": "<div style=\"font-family:'Plus Jakarta Sans',Arial,sans-serif;color:#0F1A2E;padding:24px;\"><h2 style=\"color:#1F4068\">Cita confirmada</h2><p>Hola {{$('Preparar Datos').first().json.tutor.nombre}},</p><p>Tu cita para <strong>{{$('Preparar Datos').first().json.paciente.nombre}}</strong> está confirmada para el <strong>{{$('Preparar Datos').first().json.fecha}} a las {{$('Preparar Datos').first().json.hora}}</strong>.</p><p>Servicio: {{$('Preparar Datos').first().json.servicio_slug}}.</p><p style=\"margin-top:24px\">Gastro Kids · Dr. Alfredo Mora</p></div>",
+        "options": {}
+      },
+      "id": "8",
+      "name": "Email · Tutor",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1780, 220],
+      "credentials": {
+        "smtp": {
+          "id": "smtp-gastrokids",
+          "name": "SMTP Gastro Kids"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/conversations/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-04-15" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"type\": \"WhatsApp\",\n  \"contactId\": \"{{$('GHL · Upsert Contacto').first().json.contact.id}}\",\n  \"message\": \"Gastro Kids · Cita confirmada para {{$('Preparar Datos').first().json.paciente.nombre}} el {{$('Preparar Datos').first().json.fecha}} a las {{$('Preparar Datos').first().json.hora}}. Te esperamos.\"\n}",
+        "options": {}
+      },
+      "id": "9",
+      "name": "WhatsApp · Tutor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1780, 380],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ghl-api-key",
+          "name": "GHL Private API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true, \"cita_id\": \"{{$('Supabase · Insert Cita').first().json.id}}\", \"ghl_appointment_id\": \"{{$('GHL · Crear Cita').first().json.id}}\" }"
+      },
+      "id": "10",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [2000, 300]
+    }
+  ],
+  "connections": {
+    "Webhook · agendar-cita": { "main": [[{ "node": "Preparar Datos", "type": "main", "index": 0 }]] },
+    "Preparar Datos": { "main": [[{ "node": "GHL · Upsert Contacto", "type": "main", "index": 0 }]] },
+    "GHL · Upsert Contacto": { "main": [[{ "node": "Supabase · Upsert Paciente", "type": "main", "index": 0 }]] },
+    "Supabase · Upsert Paciente": { "main": [[{ "node": "Supabase · Upsert Tutor", "type": "main", "index": 0 }]] },
+    "Supabase · Upsert Tutor": { "main": [[{ "node": "GHL · Crear Cita", "type": "main", "index": 0 }]] },
+    "GHL · Crear Cita": { "main": [[{ "node": "Supabase · Insert Cita", "type": "main", "index": 0 }]] },
+    "Supabase · Insert Cita": {
+      "main": [[
+        { "node": "Email · Tutor", "type": "main", "index": 0 },
+        { "node": "WhatsApp · Tutor", "type": "main", "index": 0 }
+      ]]
+    },
+    "Email · Tutor": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "WhatsApp · Tutor": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": ["gastro-kids", "ghl"]
+}

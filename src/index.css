@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --navy: 215 53% 27%;
+    --leaf: 88 44% 50%;
+    --teal: 177 47% 45%;
+    --amber: 28 76% 60%;
+    --coral: 8 73% 70%;
+    --offwhite: 60 17% 98%;
+    --offblack: 218 51% 12%;
+
+    --background: 60 17% 98%;
+    --foreground: 218 51% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 218 51% 12%;
+    --muted: 215 20% 96%;
+    --muted-foreground: 215 16% 40%;
+    --border: 215 16% 90%;
+    --ring: 215 53% 27%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1,
+      "ss01" 1;
+  }
+
+  ::selection {
+    @apply bg-navy text-offwhite;
+  }
+
+  h1,
+  h2,
+  h3,
+  .font-display {
+    font-family: "Fraunces", ui-serif, Georgia, serif;
+    font-feature-settings: "ss01" 1;
+    letter-spacing: -0.02em;
+  }
+
+  *:focus-visible {
+    @apply outline-none ring-2 ring-navy/40 ring-offset-2 ring-offset-background rounded-md;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .container-narrow {
+    @apply mx-auto max-w-5xl px-6 lg:px-8;
+  }
+
+  .container-wide {
+    @apply mx-auto max-w-7xl px-6 lg:px-8;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground;
+  }
+
+  .gsap-reveal {
+    will-change: transform, opacity;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-grain {
+    background-image:
+      radial-gradient(
+        circle at 1px 1px,
+        hsl(215 53% 27% / 0.06) 1px,
+        transparent 0
+      );
+    background-size: 24px 24px;
+  }
+
+  .mask-fade-bottom {
+    mask-image: linear-gradient(to bottom, black 70%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, black 70%, transparent);
+  }
+}

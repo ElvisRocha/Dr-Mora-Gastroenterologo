@@ -1,0 +1,170 @@
+{
+  "name": "Gastro Kids · Actualizar Paciente (Primera consulta)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "actualizar-paciente",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "1",
+      "name": "Webhook · actualizar-paciente",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapea el formulario completo de primera consulta a campos de Supabase + GHL\nconst body = $input.first().json.body ?? $input.first().json;\n\nreturn [{\n  json: {\n    paciente_id: body.paciente_id,\n    ghl_contact_id: body.ghl_contact_id,\n    expediente: {\n      tipo_lactancia: body.lactancia_tipo,\n      duracion_lactancia_meses: body.lactancia_duracion_meses,\n      edad_ablactacion_meses: body.edad_ablactacion_meses,\n      alimentos_introducidos: body.alimentos_introducidos,\n      fam_eii: !!body.fam_eii,\n      fam_celiaquia: !!body.fam_celiaquia,\n      fam_intolerancia_lactosa: !!body.fam_intolerancia_lactosa,\n      fam_atopia: !!body.fam_atopia,\n      fam_alergias: body.fam_alergias,\n      dx_erge: !!body.dx_erge,\n      dx_estrenimiento_cronico: !!body.dx_estrenimiento_cronico,\n      dx_aplv: !!body.dx_aplv,\n      dx_intol_lactosa: !!body.dx_intol_lactosa,\n      dx_celiaquia: !!body.dx_celiaquia,\n      dx_crohn: !!body.dx_crohn,\n      dx_cuci: !!body.dx_cuci,\n      bristol: body.bristol,\n      frecuencia_evacuaciones_semana: body.frecuencia_evacuaciones,\n      reflujo: !!body.reflujo,\n      vomitos: !!body.vomitos,\n      alergias_medicamentos: body.alergias_medicamentos,\n      hospitalizaciones_previas: body.hospitalizaciones_previas,\n      cirugias_previas: body.cirugias_previas,\n      notas_generales: body.notas\n    },\n    antropometria: body.peso_kg && body.talla_cm ? {\n      peso_kg: body.peso_kg,\n      talla_cm: body.talla_cm,\n      perimetro_cefalico_cm: body.perimetro_cefalico_cm || null\n    } : null\n  }\n}];"
+      },
+      "id": "2",
+      "name": "Mapear Campos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "table": "expediente_master",
+        "operation": "upsert",
+        "filters": {
+          "values": [{ "name": "paciente_id", "value": "={{$json.paciente_id}}" }]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "paciente_id", "fieldValue": "={{$json.paciente_id}}" },
+            { "fieldId": "tipo_lactancia", "fieldValue": "={{$json.expediente.tipo_lactancia}}" },
+            { "fieldId": "duracion_lactancia_meses", "fieldValue": "={{$json.expediente.duracion_lactancia_meses}}" },
+            { "fieldId": "edad_ablactacion_meses", "fieldValue": "={{$json.expediente.edad_ablactacion_meses}}" },
+            { "fieldId": "fam_eii", "fieldValue": "={{$json.expediente.fam_eii}}" },
+            { "fieldId": "fam_celiaquia", "fieldValue": "={{$json.expediente.fam_celiaquia}}" },
+            { "fieldId": "fam_atopia", "fieldValue": "={{$json.expediente.fam_atopia}}" },
+            { "fieldId": "dx_erge", "fieldValue": "={{$json.expediente.dx_erge}}" },
+            { "fieldId": "dx_estrenimiento_cronico", "fieldValue": "={{$json.expediente.dx_estrenimiento_cronico}}" },
+            { "fieldId": "dx_aplv", "fieldValue": "={{$json.expediente.dx_aplv}}" },
+            { "fieldId": "dx_celiaquia", "fieldValue": "={{$json.expediente.dx_celiaquia}}" },
+            { "fieldId": "dx_crohn", "fieldValue": "={{$json.expediente.dx_crohn}}" },
+            { "fieldId": "dx_cuci", "fieldValue": "={{$json.expediente.dx_cuci}}" },
+            { "fieldId": "bristol", "fieldValue": "={{$json.expediente.bristol}}" },
+            { "fieldId": "frecuencia_evacuaciones_semana", "fieldValue": "={{$json.expediente.frecuencia_evacuaciones_semana}}" },
+            { "fieldId": "reflujo", "fieldValue": "={{$json.expediente.reflujo}}" },
+            { "fieldId": "vomitos", "fieldValue": "={{$json.expediente.vomitos}}" },
+            { "fieldId": "alergias_medicamentos", "fieldValue": "={{$json.expediente.alergias_medicamentos}}" },
+            { "fieldId": "notas_generales", "fieldValue": "={{$json.expediente.notas_generales}}" }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Supabase · Upsert Expediente",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-service-role",
+          "name": "Supabase Gastro Kids"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [
+            { "id": "1", "leftValue": "={{$('Mapear Campos').first().json.antropometria}}", "rightValue": "", "operator": { "type": "object", "operation": "notEmpty" } }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "4",
+      "name": "¿Antropometría?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "table": "antropometria",
+        "operation": "create",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "paciente_id", "fieldValue": "={{$('Mapear Campos').first().json.paciente_id}}" },
+            { "fieldId": "peso_kg", "fieldValue": "={{$('Mapear Campos').first().json.antropometria.peso_kg}}" },
+            { "fieldId": "talla_cm", "fieldValue": "={{$('Mapear Campos').first().json.antropometria.talla_cm}}" },
+            { "fieldId": "perimetro_cefalico_cm", "fieldValue": "={{$('Mapear Campos').first().json.antropometria.perimetro_cefalico_cm}}" }
+          ]
+        }
+      },
+      "id": "5",
+      "name": "Supabase · Insert Antropometría",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1120, 220],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-service-role",
+          "name": "Supabase Gastro Kids"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://services.leadconnectorhq.com/contacts/{{$('Mapear Campos').first().json.ghl_contact_id}}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Version", "value": "2021-07-28" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"customFields\": [\n    {\"key\": \"dx_erge\", \"field_value\": \"{{$('Mapear Campos').first().json.expediente.dx_erge}}\"},\n    {\"key\": \"dx_aplv\", \"field_value\": \"{{$('Mapear Campos').first().json.expediente.dx_aplv}}\"},\n    {\"key\": \"dx_celiaquia\", \"field_value\": \"{{$('Mapear Campos').first().json.expediente.dx_celiaquia}}\"},\n    {\"key\": \"alergias\", \"field_value\": \"{{$('Mapear Campos').first().json.expediente.fam_alergias}}\"}\n  ]\n}",
+        "options": {}
+      },
+      "id": "6",
+      "name": "GHL · PUT Contact",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 380],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ghl-api-key",
+          "name": "GHL Private API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"ok\": true }"
+      },
+      "id": "7",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [1340, 300]
+    }
+  ],
+  "connections": {
+    "Webhook · actualizar-paciente": { "main": [[{ "node": "Mapear Campos", "type": "main", "index": 0 }]] },
+    "Mapear Campos": { "main": [[{ "node": "Supabase · Upsert Expediente", "type": "main", "index": 0 }]] },
+    "Supabase · Upsert Expediente": { "main": [[{ "node": "¿Antropometría?", "type": "main", "index": 0 }]] },
+    "¿Antropometría?": {
+      "main": [
+        [{ "node": "Supabase · Insert Antropometría", "type": "main", "index": 0 }],
+        [{ "node": "GHL · PUT Contact", "type": "main", "index": 0 }]
+      ]
+    },
+    "Supabase · Insert Antropometría": { "main": [[{ "node": "GHL · PUT Contact", "type": "main", "index": 0 }]] },
+    "GHL · PUT Contact": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": ["gastro-kids", "ghl"]
+}

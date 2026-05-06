@@ -8,7 +8,7 @@ import { cn } from "@/lib/cn";
 export function FAQ() {
   const { t } = useLang();
   const ref = useGsapReveal<HTMLElement>({ stagger: 0.05 });
-  const [open, setOpen] = useState<number | null>(0);
+  const [open, setOpen] = useState<number | null>(null);
 
   return (
     <section id="faq" ref={ref} className="scroll-mt-24 py-24 lg:py-32">

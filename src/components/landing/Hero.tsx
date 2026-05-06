@@ -122,7 +122,7 @@ export function Hero() {
             ))}
           </div>
 
-          <div className="mt-8 flex max-w-xl justify-center">
+          <div className="mt-10 flex max-w-xl justify-center lg:mt-16">
             <ButtonLink
               data-hero-cta
               to="/agendar-cita"

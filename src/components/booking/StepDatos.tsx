@@ -2,6 +2,8 @@ import { useLang } from "@/contexts/LanguageContext";
 import { Field, Input, Select, Textarea } from "@/components/ui/Input";
 import type { BookingPayload } from "@/lib/schemas/bookingSchema";
 
+export type StepDatosMode = "adulto" | "tutor" | "paciente";
+
 type StepDatosData = Partial<Omit<BookingPayload, "tutor" | "paciente">> & {
   tutor?: Partial<BookingPayload["tutor"]>;
   paciente?: Partial<BookingPayload["paciente"]>;
@@ -14,95 +16,119 @@ type Patch = {
 };
 
 export function StepDatos({
+  mode,
   data,
   onChange,
 }: {
+  mode: StepDatosMode;
   data: StepDatosData;
   onChange: (patch: Patch) => void;
 }) {
   const { t, lang } = useLang();
-  const t1 = data.tutor ?? {};
-  const p = data.paciente ?? {};
+  const tutor = data.tutor ?? {};
+  const paciente = data.paciente ?? {};
 
-  return (
-    <div className="space-y-10">
-      <div>
-        <h2 className="font-display text-xl font-semibold text-navy">
-          {t.booking.datosTutor}
-        </h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+  if (mode === "tutor") {
+    return (
+      <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t.booking.relacion} required>
             <Select
-              value={t1.relacion ?? ""}
+              value={tutor.relacion ?? ""}
               onChange={(e) =>
-                onChange({ tutor: { relacion: e.target.value as BookingPayload["tutor"]["relacion"] } })
+                onChange({
+                  tutor: {
+                    relacion: e.target
+                      .value as BookingPayload["tutor"]["relacion"],
+                  },
+                })
               }
             >
               <option value="" disabled>
                 — {lang === "es" ? "Selecciona" : "Select"} —
               </option>
-              <option value="madre">{lang === "es" ? "Madre" : "Mother"}</option>
-              <option value="padre">{lang === "es" ? "Padre" : "Father"}</option>
-              <option value="abuelo">{lang === "es" ? "Abuelo/a" : "Grandparent"}</option>
-              <option value="tio">{lang === "es" ? "Tío/a" : "Aunt/Uncle"}</option>
+              <option value="madre">
+                {lang === "es" ? "Madre" : "Mother"}
+              </option>
+              <option value="padre">
+                {lang === "es" ? "Padre" : "Father"}
+              </option>
+              <option value="abuelo">
+                {lang === "es" ? "Abuelo/a" : "Grandparent"}
+              </option>
+              <option value="tio">
+                {lang === "es" ? "Tío/a" : "Aunt/Uncle"}
+              </option>
               <option value="tutor_legal">
                 {lang === "es" ? "Tutor legal" : "Legal guardian"}
               </option>
-              <option value="otro">{lang === "es" ? "Otro" : "Other"}</option>
+              <option value="otro">
+                {lang === "es" ? "Otro" : "Other"}
+              </option>
             </Select>
           </Field>
           <Field label={t.booking.nombre} required>
             <Input
-              value={t1.nombre ?? ""}
+              value={tutor.nombre ?? ""}
               onChange={(e) => onChange({ tutor: { nombre: e.target.value } })}
             />
           </Field>
           <Field label={t.booking.apellidos} required>
             <Input
-              value={t1.apellidos ?? ""}
-              onChange={(e) => onChange({ tutor: { apellidos: e.target.value } })}
+              value={tutor.apellidos ?? ""}
+              onChange={(e) =>
+                onChange({ tutor: { apellidos: e.target.value } })
+              }
             />
           </Field>
           <Field label={t.booking.telefono} required>
             <Input
               type="tel"
               placeholder="+52 55 …"
-              value={t1.telefono ?? ""}
-              onChange={(e) => onChange({ tutor: { telefono: e.target.value } })}
+              value={tutor.telefono ?? ""}
+              onChange={(e) =>
+                onChange({ tutor: { telefono: e.target.value } })
+              }
             />
           </Field>
           <Field label={t.booking.email} className="sm:col-span-2" required>
             <Input
               type="email"
-              value={t1.email ?? ""}
+              value={tutor.email ?? ""}
               onChange={(e) => onChange({ tutor: { email: e.target.value } })}
             />
           </Field>
-        </div>
       </div>
+    );
+  }
 
-      <div>
-        <h2 className="font-display text-xl font-semibold text-navy">
-          {t.booking.datosNino}
-        </h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+  // mode === "paciente" or "adulto" share the patient identity block.
+  return (
+    <div className="space-y-8">
+      <div className="grid gap-4 sm:grid-cols-2">
           <Field label={t.booking.nombre} required>
             <Input
-              value={p.nombre ?? ""}
-              onChange={(e) => onChange({ paciente: { nombre: e.target.value } })}
+              value={paciente.nombre ?? ""}
+              onChange={(e) =>
+                onChange({ paciente: { nombre: e.target.value } })
+              }
             />
           </Field>
-          <Field label={lang === "es" ? "Apellido paterno" : "Paternal surname"} required>
+          <Field
+            label={lang === "es" ? "Apellido paterno" : "Paternal surname"}
+            required
+          >
             <Input
-              value={p.apellidoPaterno ?? ""}
+              value={paciente.apellidoPaterno ?? ""}
               onChange={(e) =>
                 onChange({ paciente: { apellidoPaterno: e.target.value } })
               }
             />
           </Field>
-          <Field label={lang === "es" ? "Apellido materno" : "Maternal surname"}>
+          <Field
+            label={lang === "es" ? "Apellido materno" : "Maternal surname"}
+          >
             <Input
-              value={p.apellidoMaterno ?? ""}
+              value={paciente.apellidoMaterno ?? ""}
               onChange={(e) =>
                 onChange({ paciente: { apellidoMaterno: e.target.value } })
               }
@@ -112,19 +138,24 @@ export function StepDatos({
             <Input
               type="date"
               max={new Date().toISOString().slice(0, 10)}
-              value={p.fechaNacimiento ?? ""}
+              value={paciente.fechaNacimiento ?? ""}
               onChange={(e) =>
                 onChange({ paciente: { fechaNacimiento: e.target.value } })
               }
             />
           </Field>
-          <Field label={t.booking.sexo} className="sm:col-span-2" required>
+          <Field
+            label={t.booking.sexo}
+            className={mode === "adulto" ? undefined : "sm:col-span-2"}
+            required
+          >
             <Select
-              value={p.sexo ?? ""}
+              value={paciente.sexo ?? ""}
               onChange={(e) =>
                 onChange({
                   paciente: {
-                    sexo: e.target.value as BookingPayload["paciente"]["sexo"],
+                    sexo: e.target
+                      .value as BookingPayload["paciente"]["sexo"],
                   },
                 })
               }
@@ -132,20 +163,57 @@ export function StepDatos({
               <option value="" disabled>
                 — {lang === "es" ? "Selecciona" : "Select"} —
               </option>
-              <option value="masculino">{lang === "es" ? "Masculino" : "Male"}</option>
-              <option value="femenino">{lang === "es" ? "Femenino" : "Female"}</option>
-              <option value="intersexual">{lang === "es" ? "Intersexual" : "Intersex"}</option>
+              <option value="masculino">
+                {lang === "es" ? "Masculino" : "Male"}
+              </option>
+              <option value="femenino">
+                {lang === "es" ? "Femenino" : "Female"}
+              </option>
+              <option value="intersexual">
+                {lang === "es" ? "Intersexual" : "Intersex"}
+              </option>
               <option value="no_especificado">
                 {lang === "es" ? "Prefiero no decirlo" : "Prefer not to say"}
               </option>
             </Select>
           </Field>
-        </div>
+
+          {mode === "adulto" ? (
+            <>
+              <Field label={t.booking.telefono} required>
+                <Input
+                  type="tel"
+                  placeholder="+52 55 …"
+                  value={tutor.telefono ?? ""}
+                  onChange={(e) =>
+                    onChange({ tutor: { telefono: e.target.value } })
+                  }
+                />
+              </Field>
+              <Field
+                label={t.booking.email}
+                className="sm:col-span-2"
+                required
+              >
+                <Input
+                  type="email"
+                  value={tutor.email ?? ""}
+                  onChange={(e) =>
+                    onChange({ tutor: { email: e.target.value } })
+                  }
+                />
+              </Field>
+            </>
+          ) : null}
       </div>
 
       <Field
         label={t.booking.motivoConsulta}
-        hint={lang === "es" ? "Opcional. Describe brevemente el motivo." : "Optional. Briefly describe the reason."}
+        hint={
+          lang === "es"
+            ? "Opcional. Describe brevemente el motivo."
+            : "Optional. Briefly describe the reason."
+        }
       >
         <Textarea
           value={data.motivo ?? ""}

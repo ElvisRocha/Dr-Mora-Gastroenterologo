@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"c:/SmartFlow-Automations/\" 2>/dev/null)",
+      "Read(//c/SmartFlow-Automations/**)",
+      "Bash(ls \"c:/\" 2>/dev/null | head -50; echo \"---\"; find /c -maxdepth 4 -type d -iname \"*ekaterina*\" 2>/dev/null | head -10)",
+      "Read(//c//**)",
+      "Bash(git clone *)",
+      "Bash(npx tsc *)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(echo \"---exit=$?\")"
+    ]
+  }
+}

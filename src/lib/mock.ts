@@ -17,60 +17,165 @@ export const serviciosMock: ServicioMock[] = [
   { slug: "seguimiento-cronico", icon: "calendar", duracion: 30 },
 ];
 
+export type GaleriaCategory =
+  | "consultorio"
+  | "procedimientos"
+  | "nutricion"
+  | "pacientes";
+
 export type GaleriaItem = {
+  id: number;
   src: string;
   alt: string;
-  span?: "wide" | "tall" | "square";
+  category: GaleriaCategory;
 };
 
-// Las 4 primeras se muestran en la sección destacada del landing.
-// El resto se ven en /galeria.
+const unsplash = (id: string, w: number, h: number) =>
+  `https://images.unsplash.com/photo-${id}?w=${w}&h=${h}&fit=crop&auto=format&q=80`;
+
+// Las 4 primeras se muestran en la sección destacada del landing,
+// alineadas con `t.galeria.featuredCards` (recepción, consultorio,
+// procedimientos, equipo).
+// El resto se distribuye entre las categorías de /galeria.
 export const galeriaMock: GaleriaItem[] = [
+  // Featured (landing) — 4 primeras
   {
-    src: "https://picsum.photos/seed/gastrokids-recepcion/960/720",
+    id: 1,
+    src: unsplash("1629909613654-28e377c37b09", 960, 720),
     alt: "Área de recepción del consultorio",
+    category: "consultorio",
   },
   {
-    src: "https://picsum.photos/seed/gastrokids-consulta/960/720",
-    alt: "Consultorio de evaluación pediátrica",
+    id: 2,
+    src: unsplash("1576091160399-112ba8d25d1d", 960, 720),
+    alt: "Consulta pediátrica",
+    category: "consultorio",
   },
   {
-    src: "https://picsum.photos/seed/gastrokids-procedimiento/960/720",
+    id: 3,
+    src: unsplash("1666214280391-8ff5bd3c0bf0", 960, 720),
     alt: "Sala de procedimientos endoscópicos",
+    category: "procedimientos",
   },
   {
-    src: "https://picsum.photos/seed/gastrokids-equipo/960/720",
-    alt: "Equipo del consultorio",
+    id: 4,
+    src: unsplash("1631217868264-e5b90bb7e133", 960, 720),
+    alt: "Equipo médico del consultorio",
+    category: "consultorio",
+  },
+
+  // Consultorio (resto)
+  {
+    id: 5,
+    src: unsplash("1631815588090-d4bfec5b1ccb", 960, 720),
+    alt: "Sala de evaluación pediátrica",
+    category: "consultorio",
   },
   {
-    src: "https://picsum.photos/seed/gastrokids-juegos/720/720",
-    alt: "Área de espera lúdica",
-    span: "square",
+    id: 6,
+    src: unsplash("1559839734-2b71ea197ec2", 960, 720),
+    alt: "Atención clínica personalizada",
+    category: "consultorio",
+  },
+
+  // Procedimientos
+  {
+    id: 7,
+    src: unsplash("1582719471384-894fbb16e074", 960, 720),
+    alt: "Laboratorio de análisis",
+    category: "procedimientos",
   },
   {
-    src: "https://picsum.photos/seed/gastrokids-nutricion/720/900",
-    alt: "Consulta de nutrición infantil",
-    span: "tall",
+    id: 8,
+    src: unsplash("1551601651-2a8555f1a136", 960, 720),
+    alt: "Equipo de diagnóstico",
+    category: "procedimientos",
   },
   {
-    src: "https://picsum.photos/seed/gastrokids-laboratorio/960/720",
-    alt: "Laboratorio aliado",
-    span: "wide",
+    id: 9,
+    src: unsplash("1538108149393-fbbd81895907", 960, 720),
+    alt: "Pasillo hospitalario",
+    category: "procedimientos",
   },
   {
-    src: "https://picsum.photos/seed/gastrokids-detalle/720/900",
-    alt: "Detalle del consultorio",
-    span: "tall",
+    id: 10,
+    src: unsplash("1606811971618-4486d14f3f99", 960, 720),
+    alt: "Sala de exploración",
+    category: "procedimientos",
+  },
+  {
+    id: 11,
+    src: unsplash("1559757148-5c350d0d3c56", 960, 720),
+    alt: "Instrumental médico",
+    category: "procedimientos",
+  },
+
+  // Nutrición
+  {
+    id: 12,
+    src: unsplash("1490645935967-10de6ba17061", 960, 720),
+    alt: "Plato saludable para niños",
+    category: "nutricion",
+  },
+  {
+    id: 13,
+    src: unsplash("1502691876148-a84978e59af8", 960, 720),
+    alt: "Comida nutritiva infantil",
+    category: "nutricion",
+  },
+  {
+    id: 14,
+    src: unsplash("1490818387583-1baba5e638af", 960, 720),
+    alt: "Frutas y verduras frescas",
+    category: "nutricion",
+  },
+  {
+    id: 15,
+    src: unsplash("1542884748-2b87b36c6b90", 960, 720),
+    alt: "Selección de alimentos saludables",
+    category: "nutricion",
+  },
+  {
+    id: 16,
+    src: unsplash("1607619056574-7b8d3ee536b2", 960, 720),
+    alt: "Plan alimentario pediátrico",
+    category: "nutricion",
+  },
+
+  // Pacientes felices
+  {
+    id: 17,
+    src: unsplash("1587814213271-7a6625b76c33", 960, 720),
+    alt: "Niño sonriente",
+    category: "pacientes",
+  },
+  {
+    id: 18,
+    src: unsplash("1503454537195-1dcabb73ffb9", 960, 720),
+    alt: "Infancia activa",
+    category: "pacientes",
+  },
+  {
+    id: 19,
+    src: unsplash("1518152006812-edab29b069ac", 960, 720),
+    alt: "Familia con paciente",
+    category: "pacientes",
+  },
+  {
+    id: 20,
+    src: unsplash("1530497610245-94d3c16cda28", 960, 720),
+    alt: "Niños saludables",
+    category: "pacientes",
   },
 ];
 
 export const galeriaDestacada = galeriaMock.slice(0, 4);
 
 export const heroIlustracion =
-  "https://picsum.photos/seed/gastrokids-hero-portrait/900/1100";
+  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&h=1100&fit=crop&auto=format&q=80";
 
 export const doctorPortrait =
-  "https://picsum.photos/seed/dr-alfredo-mora/640/800";
+  "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=640&h=800&fit=crop&auto=format&q=80";
 
 export const whatsappLink =
   "https://wa.me/525555555555?text=Hola%2C%20me%20gustar%C3%ADa%20agendar%20una%20cita%20para%20mi%20hijo%2Fa.";

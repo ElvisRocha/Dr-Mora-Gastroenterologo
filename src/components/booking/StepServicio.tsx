@@ -24,12 +24,8 @@ export function StepServicio({
   const { t } = useLang();
 
   return (
-    <div>
-      <h2 className="font-display text-xl font-semibold text-navy">
-        {t.booking.seleccionarServicio}
-      </h2>
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        {t.servicios.items.map((s) => {
+    <div className="grid gap-3 sm:grid-cols-2">
+      {t.servicios.items.map((s) => {
           const meta = serviciosMock.find((m) => m.slug === s.slug);
           const Icon = iconMap[meta?.icon ?? "stethoscope"];
           const active = value === s.slug;
@@ -68,7 +64,6 @@ export function StepServicio({
             </button>
           );
         })}
-      </div>
     </div>
   );
 }

@@ -92,12 +92,9 @@ export default function SobreElDoctor() {
         </div>
 
         <div className="lg:col-span-7">
-          <span className="eyebrow" data-reveal>
-            {t.doctor.eyebrow}
-          </span>
           <h1
             data-reveal
-            className="mt-5 max-w-xl font-display text-fluid-h1 font-semibold leading-tight tracking-tight text-navy"
+            className="max-w-xl font-display text-fluid-h1 font-semibold leading-tight tracking-tight text-navy"
           >
             {t.doctor.title}
           </h1>

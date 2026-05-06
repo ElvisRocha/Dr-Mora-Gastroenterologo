@@ -66,7 +66,7 @@ const config: Config = {
       },
       keyframes: {
         "fade-up": {
-          "0%": { opacity: "0", transform: "translateY(16px)" },
+          "0%": { opacity: "0", transform: "translateY(6px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
         "fade-in": {
@@ -91,7 +91,7 @@ const config: Config = {
         },
       },
       animation: {
-        "fade-up": "fade-up .7s ease-out both",
+        "fade-up": "fade-up 0.6s cubic-bezier(0.32, 0.72, 0, 1) both",
         "fade-in": "fade-in .6s ease-out both",
         "soft-pulse": "soft-pulse 3s ease-in-out infinite",
         "scale-in": "scale-in .3s ease-out both",

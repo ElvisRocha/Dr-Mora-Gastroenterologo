@@ -1,0 +1,163 @@
+
+========== FILE 1 (40 prompts) ==========
+
+--- [1.1] (len=39) ---
+Necesito que elimines la card enmarcada
+
+--- [1.2] (len=174) ---
+Necesito que separes un poco mas el boton de agendar cita de los badges. mas o menos al nivel mostrado en la imagen
+
+hazme las preguntas que necesites para lograr esta tarea.
+
+--- [1.3] (len=29) ---
+Ok vamos con tu recomendacion
+
+--- [1.4] (len=223) ---
+perfecto movamonos al siguiente punto, Necesito que cambies las imagenes que existen actualmente en la pagina, carga imagenes mock data relacionada a lo que digan las secciones y el objetivo de la pag...
+
+--- [1.5] (len=280) ---
+hay muhas imagenes que no estan calzando bien, necesito que cada imagen que insertaste se adapte al ancho completo del componente existente. NO CAMBIES LAS DIMENSIONES DEL COMPONENTE, haz que la image...
+
+--- [1.6] (len=71) ---
+Utiliza la imagen 1 en la foto que se usa en la seccion sobre el doctor
+
+--- [1.7] (len=71) ---
+la imagen la conseguiste tu, esta en la seccion de galeria de la pagina
+
+--- [1.8] (len=62) ---
+detalle de consultorio y si  actualizalo en las 2 secciones de
+
+--- [1.9] (len=446) ---
+Perfecto, creo que esta bien asi para la landing page, ahora, necesito que copies la estructura de la galeria de imagenes del repositorio dra-ekaterina-gine para el manejo de imagenes. 
+
+Consigue mas ...
+
+--- [1.10] (len=641) ---
+1. Acceso al repo de referencia
+  El link del repositorio es este https://github.com/ElvisRocha/dra-ekaterina-gine
+2. Sobre los "tabs": Una vez que veas el repositorio decide tu como nombrar los tabs
+3. Distribución de las 20 imágenes: analiza las imagenes y distribuyelas segun se vea de que tratan (recuerda conseguir imagenes relacionadas siempre a gastroenterologia infantil, pediatria y demas temas que trata la pagina)
+4. i18n: si traduce llos nombres de los tabs
+5. Selección de fotos: si conf... [TRUNCATED, original length: 641 chars]
+
+--- [1.11] (len=26) ---
+elimina el badge enmarcado
+
+--- [1.12] (len=26) ---
+elimina el badge enmarcado
+
+--- [1.13] (len=126) ---
+Para esta seccion de contacto necesito que te fijes en el repositorio de la dra-ekaterina-gine y lo recrees para este proyecto
+
+--- [1.14] (len=144) ---
+Ok nos movemos al proceso de agendar citas, necesito hacer varios cambios en este flujo, primero elimina todo lo que este enmarcado en la imagen
+
+--- [1.15] (len=128) ---
+ahora cambia el orden de los steps, los datos se deben rellenar en el step 2 y la fecha y hora se deben seleccionar en el step 3
+
+--- [1.16] (len=878) ---
+Necesito que hacer un cambio un poco mayor para el step 2,
+
+Necesito que cuando se llegue al paso 2 en vez de mostrar de una vez los campos que se nesesitan rellenar, se le plantee una pregunta al usuario, esta sera "¿El paciente es mayor de edad (+18años)?" con dos opciones de respuesta en formato de botones "si, es mayor de edad" o "no, es menor de edad".
+
+Si la opcion "Si, es mayor de edad" es seleccionada se deberan mostrar y habilitar para editar los datos en la imagen 1.
+
+Si la respuesta e... [TRUNCATED, original length: 878 chars]
+
+--- [1.17] (len=457) ---
+1. Posición exacta del nuevo step (3.5)
+    -Tienes razon,  1.Servicio → 2.Datos del tutor → 2.5.Datos del paciente → 3.Fecha y hora → 4.Confirmar
+2. Caso "mayor de edad": ¿se eliminan los datos del t...
+
+--- [1.18] (len=29) ---
+[Request interrupted by user]
+
+--- [1.19] (len=805) ---
+1. Posición exacta del nuevo step (3.5)
+    -Tienes razon,  1.Servicio → 2.Datos del tutor → 2.5.Datos del paciente → 3.Fecha y hora → 4.Confirmar
+2. Caso "mayor de edad": ¿se eliminan los datos del tutor?
+    -correcto, vamos con tu recomendacion. b) El tutor se autocompleta con los datos del paciente (mismo nombre/teléfono/email, relación = "paciente" o "self").
+3. Stepper visual
+    -Cuando se elige la opcion de menor de edad debe aplicar esta logica. b) El stepper se vuelve dinámico: muestra... [TRUNCATED, original length: 805 chars]
+
+--- [1.20] (len=247) ---
+ok, si bien, se implemento como queria, intenta compiar como se ve el flujo de agendar cita del repositorio de la dra-ekaterina-gine y aplicalo a este proyecto, no cambies nada de los pasos, lo que qu...
+
+--- [1.21] (len=197) ---
+debes hacer que si se habilita el step adicional de datos del paciente el steper se extienda a lo largo del viewport de forma equitativa pero manteniendose centrado sobre los elementos debajo de el
+
+--- [1.22] (len=271) ---
+Actualmente si se avanza en el flujo de datos y luego se retrocede el step en el que se encontraba queda marcado como "completado" esto esta mal, si se retrocede el step desde donde se esta retrocedie...
+
+--- [1.23] (len=153) ---
+Para el step de fecha y hora quiero que implementes el mismo que tiene el repositorio de la dra-ekaterina-gine tanto comportamiento como en como funciona
+
+--- [1.24] (len=129) ---
+me parece que la animacion de mostrar los datos para rellenar de los pacientes es un poco abrupta puedes suavizar esa animacion ?
+
+--- [1.25] (len=216) ---
+actualmente, al recargar la pagina y llegar a la parte de FAQS la primera pregunta siempre aparece abierta, necesito corregir esto, las FAQS deben permanecer cerradas siempre, hasta que se les de un c...
+
+--- [1.26] (len=57) ---
+con que url puedo acceder al dashboard admin del proyecto
+
+--- [1.27] (len=33) ---
+dame la url exacta que debo poner
+
+--- [1.28] (len=99) ---
+Quiero que el ingreso al admin se mire igual que el de dra-ekaterina-gine  adaptado a este proyecto
+
+--- [1.29] (len=169) ---
+Actualmente pareciera que el texto de "Panel Administrativo" fuera parte del logo, esto esta mal, necesito que apliques un poco de espacio para evitar este efecto visual
+
+--- [1.30] (len=17) ---
+elimina esa linea
+
+--- [1.31] (len=51) ---
+perfecto, ahora pasamos al dashboard administrativo
+
+--- [1.32] (len=87) ---
+Si, Necesito replicar la apariencia y comportamiento de las tabs Calendario y Dashboard
+
+--- [1.33] (len=117) ---
+Necesito que manejes quien esta conectado al dashboard igual que se maneja en el repositorio de la dra-ekaterina-gine
+
+--- [1.34] (len=67) ---
+Necesito Manejar este logo como lo manejamos en la pagina principal
+
+--- [1.35] (len=123) ---
+Cambia elimina el texto de Panel Clinico, y reemplazalo por el nombre del doctor tal cual lo hicimos en la pagina principal
+
+--- [1.36] (len=34) ---
+ahora, aumenta el tamaño en un 30%
+
+--- [1.37] (len=59) ---
+cambia el tamaño del texto a un 10px el logo aumentalo 10px
+
+--- [1.38] (len=86) ---
+agrega un padding bottom y top para que el logo no choque con los limites del viewport
+
+--- [1.39] (len=191) ---
+tambien necesito que copies y adaptes la vista de expediente basandote en como esta en el repositorio de la dra-ekaterina-gine 
+hazme las preguntas que necesites para llevar a cabo esta tarea
+
+--- [1.40] (len=584) ---
+1. Alcance funcional
+     -vamos con tu recomendacion
+2. Tabs adaptados al dominio pediátrico-gastro
+     - Estoy deacuerdo
+3. Modal "Editar paciente"
+     - si, se debe crear este modal aunque sea mock data en el recuerda introducir los diagnosticos, procedimientos y medicamientos que se le atribuyan a la persona en consulta.
+4. Backend
+     - deja preparado el codigo pensando en supabase mas adelante, pero para la demo, el guardar una nueva consulta desde el modal si debe funcionar
+5. Datos fa... [TRUNCATED, original length: 584 chars]
+
+
+========== FILE 2 (2 prompts) ==========
+
+--- [2.1] (len=116) ---
+dame el resumen de los prompts que se han utilizado para crear esta pagina y mejoralos para futuros clientes medicos
+
+--- [2.2] (len=61) ---
+dame el historial de prompts utilizados para crear este sitio
+

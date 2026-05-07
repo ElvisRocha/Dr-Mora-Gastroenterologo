@@ -180,6 +180,19 @@ export const doctorPortrait =
 export const whatsappLink =
   "https://wa.me/525555555555?text=Hola%2C%20me%20gustar%C3%ADa%20agendar%20una%20cita%20para%20mi%20hijo%2Fa.";
 
+export type MedicamentoMock = {
+  nombre: string;
+  dosis: string;
+  frecuencia: string;
+  inicio?: string;
+};
+
+export type ProcedimientoAsignadoMock = {
+  nombre: string;
+  estado: "pendiente" | "realizado";
+  fecha?: string;
+};
+
 export type PacienteMock = {
   id: string;
   nombre: string;
@@ -193,6 +206,8 @@ export type PacienteMock = {
   tutorPrincipal: string;
   telefonoTutor: string;
   email?: string;
+  medicamentosActivos?: MedicamentoMock[];
+  procedimientosAsignados?: ProcedimientoAsignadoMock[];
 };
 
 export const pacientesMock: PacienteMock[] = [
@@ -209,6 +224,13 @@ export const pacientesMock: PacienteMock[] = [
     tutorPrincipal: "Marisol Aguirre",
     telefonoTutor: "+52 55 4729 1834",
     email: "marisol.aguirre@correo.mx",
+    medicamentosActivos: [
+      { nombre: "Omeprazol", dosis: "5 mg", frecuencia: "1 vez/día", inicio: "2026-01-15" },
+      { nombre: "Fórmula extensamente hidrolizada", dosis: "120 ml", frecuencia: "Cada 4 h" },
+    ],
+    procedimientosAsignados: [
+      { nombre: "pH-metría 24h", estado: "pendiente" },
+    ],
   },
   {
     id: "p-002",
@@ -223,6 +245,9 @@ export const pacientesMock: PacienteMock[] = [
     tutorPrincipal: "Iván Reyes",
     telefonoTutor: "+52 55 6118 2247",
     email: "ivan.reyes@correo.mx",
+    medicamentosActivos: [
+      { nombre: "Multivitamínico pediátrico", dosis: "1 tableta", frecuencia: "1 vez/día" },
+    ],
   },
   {
     id: "p-003",
@@ -237,6 +262,14 @@ export const pacientesMock: PacienteMock[] = [
     tutorPrincipal: "Patricia Krauss",
     telefonoTutor: "+52 55 8472 9136",
     email: "patricia.k@correo.mx",
+    medicamentosActivos: [
+      { nombre: "Mesalazina", dosis: "800 mg", frecuencia: "3 veces/día" },
+      { nombre: "Hierro polimaltosado", dosis: "100 mg", frecuencia: "1 vez/día" },
+    ],
+    procedimientosAsignados: [
+      { nombre: "Colonoscopía de control", estado: "pendiente" },
+      { nombre: "Endoscopía digestiva alta", estado: "realizado", fecha: "2026-02-10" },
+    ],
   },
   {
     id: "p-004",
@@ -425,3 +458,365 @@ export function formatearEdad(fechaNacimiento: string, lang: "es" | "en" = "es")
   if (anos < 2) return `${anos * 12 + meses} meses`;
   return `${anos} a${meses ? ` ${meses} m` : ""}`;
 }
+
+// ===========================================================================
+// Expediente clínico extendido
+// ===========================================================================
+
+export type TutorMock = {
+  nombre: string;
+  relacion: "madre" | "padre" | "abuelo" | "tio" | "tutor_legal" | "otro";
+  telefono: string;
+  email?: string;
+  principal: boolean;
+};
+
+export type AntropometriaMock = {
+  fecha: string;
+  pesoKg: number;
+  tallaCm: number;
+  imc: number;
+  percentilPeso?: string;
+};
+
+export type AntecedentesMock = {
+  familiares: string;
+  alergias: string;
+  cirugias: string;
+  hospitalizaciones: string;
+  perinatales: {
+    tipoParto: "vaginal" | "cesarea" | "no_especificado";
+    pesoNacerKg: number;
+    tallaNacerCm: number;
+    semanasGestacion: number;
+    lactancia: string;
+  };
+};
+
+export type HabitoDigestivoMock = {
+  bristolEscala: number;
+  frecuenciaSemanal: number;
+  dolorDefecar: boolean;
+  sangrado: boolean;
+  distension: string;
+  reflujo: string;
+};
+
+export type AlimentacionMock = {
+  comidasPorDia: number;
+  dietaEspecial: string;
+  alimentosPreferidos: string[];
+  alimentosRechazados: string[];
+};
+
+export type VacunaMock = {
+  nombre: string;
+  fecha: string;
+  refuerzo?: string;
+};
+
+export type ExpedienteMock = {
+  antecedentes: AntecedentesMock;
+  antropometria: AntropometriaMock[];
+  habitoDigestivo: HabitoDigestivoMock;
+  alimentacion: AlimentacionMock;
+  vacunas: VacunaMock[];
+  tutores: TutorMock[];
+};
+
+export const expedientesMock: Record<string, ExpedienteMock> = {
+  "p-001": {
+    antecedentes: {
+      familiares: "Madre con atopia. Tío materno con EII (Crohn).",
+      alergias: "Proteína de leche de vaca.",
+      cirugias: "Ninguna.",
+      hospitalizaciones: "Una a los 8 meses por bronquiolitis (3 días).",
+      perinatales: {
+        tipoParto: "cesarea",
+        pesoNacerKg: 3.2,
+        tallaNacerCm: 49,
+        semanasGestacion: 38,
+        lactancia: "Materna exclusiva 4 meses, luego fórmula extensamente hidrolizada.",
+      },
+    },
+    antropometria: [
+      { fecha: "2026-04-22", pesoKg: 12.4, tallaCm: 92, imc: 14.6, percentilPeso: "p25" },
+      { fecha: "2026-01-10", pesoKg: 11.8, tallaCm: 89, imc: 14.9, percentilPeso: "p25" },
+      { fecha: "2025-10-04", pesoKg: 11.1, tallaCm: 86, imc: 15.0, percentilPeso: "p20" },
+      { fecha: "2025-07-12", pesoKg: 10.4, tallaCm: 82, imc: 15.5, percentilPeso: "p18" },
+    ],
+    habitoDigestivo: {
+      bristolEscala: 4,
+      frecuenciaSemanal: 7,
+      dolorDefecar: false,
+      sangrado: false,
+      distension: "Ocasional, postprandial",
+      reflujo: "Reflujo silencioso ocasional",
+    },
+    alimentacion: {
+      comidasPorDia: 5,
+      dietaEspecial: "Sin proteína de leche de vaca",
+      alimentosPreferidos: ["Pollo", "Arroz", "Manzana"],
+      alimentosRechazados: ["Vegetales de hoja verde"],
+    },
+    vacunas: [
+      { nombre: "BCG", fecha: "2022-04-13" },
+      { nombre: "Hepatitis B (3 dosis)", fecha: "2022-10-12" },
+      { nombre: "Pentavalente", fecha: "2023-04-12", refuerzo: "2024-04-12" },
+      { nombre: "Triple viral (SRP)", fecha: "2023-04-12" },
+      { nombre: "Influenza", fecha: "2025-10-15" },
+    ],
+    tutores: [
+      {
+        nombre: "Marisol Aguirre",
+        relacion: "madre",
+        telefono: "+52 55 4729 1834",
+        email: "marisol.aguirre@correo.mx",
+        principal: true,
+      },
+      {
+        nombre: "Daniel Pérez",
+        relacion: "padre",
+        telefono: "+52 55 6118 8472",
+        principal: false,
+      },
+    ],
+  },
+  "p-002": {
+    antecedentes: {
+      familiares: "Padre con celiaquía. Abuela materna con tiroiditis autoinmune.",
+      alergias: "Ninguna conocida.",
+      cirugias: "Ninguna.",
+      hospitalizaciones: "Ninguna.",
+      perinatales: {
+        tipoParto: "vaginal",
+        pesoNacerKg: 3.5,
+        tallaNacerCm: 51,
+        semanasGestacion: 40,
+        lactancia: "Materna exclusiva 6 meses.",
+      },
+    },
+    antropometria: [
+      { fecha: "2026-03-18", pesoKg: 33.5, tallaCm: 142, imc: 16.6, percentilPeso: "p40" },
+      { fecha: "2025-09-14", pesoKg: 31.2, tallaCm: 138, imc: 16.4, percentilPeso: "p35" },
+      { fecha: "2025-03-22", pesoKg: 29.8, tallaCm: 135, imc: 16.3, percentilPeso: "p32" },
+    ],
+    habitoDigestivo: {
+      bristolEscala: 4,
+      frecuenciaSemanal: 7,
+      dolorDefecar: false,
+      sangrado: false,
+      distension: "Ausente con dieta libre de gluten",
+      reflujo: "Sin episodios",
+    },
+    alimentacion: {
+      comidasPorDia: 4,
+      dietaEspecial: "Estricta libre de gluten",
+      alimentosPreferidos: ["Pasta de arroz", "Frutas", "Yogurt"],
+      alimentosRechazados: [],
+    },
+    vacunas: [
+      { nombre: "Esquema completo cartilla mexicana", fecha: "2014-2024" },
+      { nombre: "VPH (1ª dosis)", fecha: "2025-08-12", refuerzo: "2026-02-12" },
+    ],
+    tutores: [
+      {
+        nombre: "Iván Reyes",
+        relacion: "padre",
+        telefono: "+52 55 6118 2247",
+        email: "ivan.reyes@correo.mx",
+        principal: true,
+      },
+    ],
+  },
+  "p-003": {
+    antecedentes: {
+      familiares: "Hermano mayor con colitis ulcerosa.",
+      alergias: "Ninguna conocida.",
+      cirugias: "Apendicectomía 2024.",
+      hospitalizaciones:
+        "Dos por brote de Crohn (2024 y 2025), control con biológico en evaluación.",
+      perinatales: {
+        tipoParto: "vaginal",
+        pesoNacerKg: 3.4,
+        tallaNacerCm: 50,
+        semanasGestacion: 39,
+        lactancia: "Materna 4 meses + fórmula.",
+      },
+    },
+    antropometria: [
+      { fecha: "2026-04-29", pesoKg: 52.8, tallaCm: 168, imc: 18.7, percentilPeso: "p35" },
+      { fecha: "2025-10-12", pesoKg: 50.2, tallaCm: 165, imc: 18.4, percentilPeso: "p30" },
+      { fecha: "2025-04-15", pesoKg: 47.5, tallaCm: 162, imc: 18.1, percentilPeso: "p28" },
+    ],
+    habitoDigestivo: {
+      bristolEscala: 5,
+      frecuenciaSemanal: 14,
+      dolorDefecar: true,
+      sangrado: true,
+      distension: "Frecuente, asociada a brotes",
+      reflujo: "Ausente",
+    },
+    alimentacion: {
+      comidasPorDia: 4,
+      dietaEspecial: "Baja en lactosa y residuos durante brotes",
+      alimentosPreferidos: ["Arroz", "Pollo a la plancha", "Plátano"],
+      alimentosRechazados: ["Lácteos enteros", "Granos integrales"],
+    },
+    vacunas: [
+      { nombre: "Esquema completo cartilla mexicana", fecha: "2008-2018" },
+      { nombre: "Influenza anual", fecha: "2025-11-04" },
+      { nombre: "Hepatitis A refuerzo", fecha: "2024-09-15" },
+    ],
+    tutores: [
+      {
+        nombre: "Patricia Krauss",
+        relacion: "madre",
+        telefono: "+52 55 8472 9136",
+        email: "patricia.k@correo.mx",
+        principal: true,
+      },
+      {
+        nombre: "Esteban Patiño",
+        relacion: "padre",
+        telefono: "+52 55 1845 9072",
+        principal: false,
+      },
+    ],
+  },
+};
+
+export const expedienteDefault: ExpedienteMock = {
+  antecedentes: {
+    familiares: "",
+    alergias: "",
+    cirugias: "",
+    hospitalizaciones: "",
+    perinatales: {
+      tipoParto: "no_especificado",
+      pesoNacerKg: 0,
+      tallaNacerCm: 0,
+      semanasGestacion: 0,
+      lactancia: "",
+    },
+  },
+  antropometria: [],
+  habitoDigestivo: {
+    bristolEscala: 4,
+    frecuenciaSemanal: 0,
+    dolorDefecar: false,
+    sangrado: false,
+    distension: "",
+    reflujo: "",
+  },
+  alimentacion: {
+    comidasPorDia: 0,
+    dietaEspecial: "",
+    alimentosPreferidos: [],
+    alimentosRechazados: [],
+  },
+  vacunas: [],
+  tutores: [],
+};
+
+export type SignosVitalesMock = {
+  pa?: string;
+  fc?: string;
+  pesoKg?: number;
+  tallaCm?: number;
+  temperatura?: number;
+  imc?: number;
+};
+
+export type ExploracionFisicaMock = {
+  abdomen?: string;
+  general?: string;
+};
+
+export type ConsultaMock = {
+  id: string;
+  pacienteId: string;
+  fecha: string;
+  servicioSlug: string;
+  motivo: string;
+  notas: string;
+  diagnosticos: string[];
+  procedimientosOrdenados: string[];
+  medicamentosRecetados: MedicamentoMock[];
+  duracionMin: number;
+  acompanante?: string;
+  enfermedadActual?: string;
+  resultadosLaboratorio?: string;
+  signosVitales?: SignosVitalesMock;
+  exploracionFisica?: ExploracionFisicaMock;
+  planTratamiento?: string;
+  notasAdicionales?: string;
+};
+
+export type ArchivoMock = {
+  id: string;
+  consultaId: string;
+  nombre: string;
+  mimeType: string;
+  tamanoBytes: number;
+  /** Data URL (base64). En migración a Supabase reemplazar por `path` + signed URL. */
+  data: string;
+  subidoEn: string;
+};
+
+export type NotaBitacoraMock = {
+  id: string;
+  consultaId: string;
+  fecha: string;
+  texto: string;
+  imagen?: string;
+  imagenNombre?: string;
+};
+
+export const consultasMock: ConsultaMock[] = [
+  {
+    id: "co-001",
+    pacienteId: "p-001",
+    fecha: at(-7, 10),
+    servicioSlug: "consulta-gastro",
+    motivo: "Vómito post-toma persistente, irritabilidad nocturna.",
+    notas:
+      "Lactante con cuadro compatible con ERGE + APLV. Continúa con fórmula extensamente hidrolizada y omeprazol. Adecuada ganancia ponderal en últimas 6 semanas. Se programa pH-metría 24h para confirmar reflujo ácido nocturno.",
+    diagnosticos: ["ERGE del lactante", "APLV"],
+    procedimientosOrdenados: ["pH-metría 24h"],
+    medicamentosRecetados: [
+      { nombre: "Omeprazol", dosis: "5 mg", frecuencia: "1 vez/día" },
+    ],
+    duracionMin: 60,
+  },
+  {
+    id: "co-002",
+    pacienteId: "p-002",
+    fecha: at(-30, 11, 30),
+    servicioSlug: "seguimiento-cronico",
+    motivo: "Control rutinario celiaquía, sin sintomatología.",
+    notas:
+      "Adherencia estricta a dieta libre de gluten. Crecimiento adecuado. Anticuerpos anti-tTG en descenso. Mantener controles cada 6 meses.",
+    diagnosticos: ["Celiaquía"],
+    procedimientosOrdenados: [],
+    medicamentosRecetados: [
+      { nombre: "Multivitamínico pediátrico", dosis: "1 tableta", frecuencia: "1 vez/día" },
+    ],
+    duracionMin: 30,
+  },
+  {
+    id: "co-003",
+    pacienteId: "p-003",
+    fecha: at(-3, 16),
+    servicioSlug: "consulta-gastro",
+    motivo: "Aumento de evacuaciones con sangre, dolor abdominal.",
+    notas:
+      "Posible brote moderado de enfermedad de Crohn. Calprotectina fecal solicitada. Considerar ajuste de mesalazina y discutir biológico en próxima consulta. Indicada dieta baja en residuos temporal.",
+    diagnosticos: ["Enfermedad de Crohn"],
+    procedimientosOrdenados: ["Colonoscopía de control", "Calprotectina fecal"],
+    medicamentosRecetados: [
+      { nombre: "Mesalazina", dosis: "800 mg", frecuencia: "3 veces/día" },
+    ],
+    duracionMin: 60,
+  },
+];

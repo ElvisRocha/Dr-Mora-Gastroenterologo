@@ -5,13 +5,17 @@ import {
   ChevronDown,
   LayoutDashboard,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
   Settings,
   User,
   Users,
 } from "lucide-react";
 import { useAuth, type Rol } from "@/hooks/useAuth";
+import { ExpedienteStoreProvider } from "@/store/expedienteStore";
 import { cn } from "@/lib/cn";
 import logoUrl from "@/assets/logo.png";
+import faviconUrl from "@/assets/favicon.png";
 
 const navItems = [
   {
@@ -53,10 +57,32 @@ const roleLabel: Record<Rol, string> = {
   secretaria: "Secretaría",
 };
 
+const COLLAPSED_KEY = "gastrokids:admin:sidebarCollapsed";
+
 export function AdminLayout() {
   const { user, signOut, hasRole } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      return window.localStorage.getItem(COLLAPSED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(COLLAPSED_KEY, collapsed ? "1" : "0");
+    } catch {
+      // ignore (private mode, quota)
+    }
+  }, [collapsed]);
+
+  const toggleSidebar = () => setCollapsed((c) => !c);
 
   const handleLogout = async () => {
     await signOut();
@@ -73,25 +99,48 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="grid min-h-[100dvh] grid-cols-[260px_1fr] bg-muted/40">
-      <aside className="flex flex-col border-r border-border bg-offwhite">
-        <div className="flex h-[96px] items-center justify-center border-b border-border px-4 py-3">
+    <ExpedienteStoreProvider>
+    <div
+      className={cn(
+        "grid min-h-[100dvh] bg-muted/40 transition-[grid-template-columns] duration-200 ease-gentle",
+        collapsed ? "grid-cols-[72px_1fr]" : "grid-cols-[260px_1fr]",
+      )}
+    >
+      <aside className="sticky top-0 flex h-[100dvh] min-w-0 flex-col border-r border-border bg-offwhite">
+        <div
+          className={cn(
+            "flex h-[96px] items-center justify-center border-b border-border py-3",
+            collapsed ? "px-2" : "px-4",
+          )}
+        >
           <NavLink
             to="/admin/dashboard"
+            title={collapsed ? "Gastro Kids · Dr. Alfredo Mora" : undefined}
             className="flex flex-col items-center leading-none transition-opacity hover:opacity-80"
           >
             <img
-              src={logoUrl}
+              src={collapsed ? faviconUrl : logoUrl}
               alt="Gastro Kids · Dr. Alfredo Mora"
-              className="h-[52px] w-auto"
+              className={cn(
+                "w-auto transition-[height] duration-200 ease-gentle",
+                collapsed ? "h-9" : "h-[52px]",
+              )}
             />
-            <span className="mt-[5px] text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
-              Dr. Alfredo Mora
-            </span>
+            {!collapsed ? (
+              <span className="mt-[5px] text-[10px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+                Dr. Alfredo Mora
+              </span>
+            ) : null}
           </NavLink>
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Admin">
+        <nav
+          className={cn(
+            "flex-1 overflow-y-auto py-4",
+            collapsed ? "px-2" : "px-3",
+          )}
+          aria-label="Admin"
+        >
           <ul className="space-y-0.5">
             {navItems
               .filter((it) => hasRole([...it.roles]))
@@ -101,23 +150,57 @@ export function AdminLayout() {
                   <li key={item.to}>
                     <NavLink
                       to={item.to}
+                      title={collapsed ? item.label : undefined}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                          "flex items-center rounded-lg text-sm font-medium transition-colors",
+                          collapsed
+                            ? "justify-center py-3"
+                            : "gap-3 px-3 py-2.5",
                           isActive
                             ? "bg-navy text-offwhite"
                             : "text-muted-foreground hover:bg-muted hover:text-foreground",
                         )
                       }
                     >
-                      <Icon size={16} strokeWidth={1.6} />
-                      {item.label}
+                      <Icon
+                        size={collapsed ? 18 : 16}
+                        strokeWidth={1.6}
+                      />
+                      {!collapsed ? item.label : null}
                     </NavLink>
                   </li>
                 );
               })}
           </ul>
         </nav>
+
+        <div
+          className={cn(
+            "border-t border-border",
+            collapsed ? "p-1.5" : "p-2",
+          )}
+        >
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            title={collapsed ? "Expandir menú" : "Colapsar menú"}
+            aria-label={collapsed ? "Expandir menú" : "Colapsar menú"}
+            className={cn(
+              "flex w-full items-center rounded-lg text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+              collapsed ? "justify-center py-3" : "gap-3 px-3 py-2.5",
+            )}
+          >
+            {collapsed ? (
+              <PanelLeftOpen size={18} strokeWidth={1.75} />
+            ) : (
+              <>
+                <PanelLeftClose size={16} strokeWidth={1.75} />
+                Colapsar menú
+              </>
+            )}
+          </button>
+        </div>
       </aside>
 
       <div className="flex min-w-0 flex-col">
@@ -154,11 +237,12 @@ export function AdminLayout() {
           ) : null}
         </header>
 
-        <main className="flex-1 overflow-auto px-5 py-6 md:px-6 md:py-8">
+        <main className="flex-1 px-5 py-6 md:px-6 md:py-8">
           <Outlet />
         </main>
       </div>
     </div>
+    </ExpedienteStoreProvider>
   );
 }
 

@@ -91,9 +91,9 @@ export default function Login() {
                   className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 >
                   {showPassword ? (
-                    <Eye size={16} strokeWidth={1.75} />
-                  ) : (
                     <EyeOff size={16} strokeWidth={1.75} />
+                  ) : (
+                    <Eye size={16} strokeWidth={1.75} />
                   )}
                 </button>
               </div>

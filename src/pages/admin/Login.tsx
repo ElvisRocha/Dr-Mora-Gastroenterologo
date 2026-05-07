@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Eye, EyeClosed, Loader2, LogIn } from "lucide-react";
+import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/Button";
@@ -93,7 +93,7 @@ export default function Login() {
                   {showPassword ? (
                     <Eye size={16} strokeWidth={1.75} />
                   ) : (
-                    <EyeClosed size={16} strokeWidth={1.75} />
+                    <EyeOff size={16} strokeWidth={1.75} />
                   )}
                 </button>
               </div>

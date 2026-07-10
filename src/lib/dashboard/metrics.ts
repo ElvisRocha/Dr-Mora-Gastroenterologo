@@ -377,20 +377,20 @@ export function actoresPorEstado(citas: AnalyticsCita[], f: FiltroState) {
 // Gastrito vs sitio web (todo el historial)
 // ---------------------------------------------------------------------------
 export function canalesSerie() {
-  // Solo meses ya transcurridos y completos: se muestran hasta el mes anterior
-  // al actual (DEMO_HOY), sin datos de julio en adelante. Coherente con el
-  // gráfico de ingresos (cuya parte realizada termina en el mes en curso).
-  const hastaMes = DEMO_HOY.getMonth(); // exclusivo → Ene..(mes-1)
+  // Hasta el mes en curso inclusive (DEMO_HOY), ocultando solo los meses
+  // futuros (agosto en adelante). Así la barra del mes actual (julio) coincide
+  // con los gráficos de fuera de horario y responsable/estado.
+  const mesActual = DEMO_HOY.getMonth(); // 6 = julio → incluye Ene..Jul
   const byMonth = new Map<number, { ana: number; web: number }>();
   for (const c of analyticsCitas) {
     const m = new Date(c.fecha).getMonth();
-    if (m >= hastaMes) continue;
+    if (m > mesActual) continue;
     const cur = byMonth.get(m) ?? { ana: 0, web: 0 };
     if (c.canal === "gastrito") cur.ana += 1;
     else if (c.canal === "web") cur.web += 1;
     byMonth.set(m, cur);
   }
-  return Array.from({ length: hastaMes }, (_, m) => ({
+  return Array.from({ length: mesActual + 1 }, (_, m) => ({
     label: MONTHS[m],
     ana: byMonth.get(m)?.ana ?? 0,
     web: byMonth.get(m)?.web ?? 0,

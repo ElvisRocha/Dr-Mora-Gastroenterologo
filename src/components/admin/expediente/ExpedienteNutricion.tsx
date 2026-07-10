@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Activity, Stethoscope, Utensils } from "lucide-react";
 import { Field, Input, Select, Textarea } from "@/components/ui/Input";
-import { TriStateChips } from "@/components/ui/TriStateChips";
 import { useExpediente } from "@/store/expedienteStore";
 import {
   ExpedienteFooter,
   Sec,
-  ToggleCell,
+  ToggleField,
   useExpedienteSection,
 } from "./formKit";
 
@@ -59,7 +58,7 @@ export function ExpedienteNutricion({ pacienteId }: { pacienteId: string }) {
   return (
     <div className="space-y-4">
       <Sec title="Hábito intestinal" icon={<Activity size={16} strokeWidth={1.75} />}>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Escala de Bristol">
             <Select
               value={h.bristolEscala}
@@ -87,28 +86,28 @@ export function ExpedienteNutricion({ pacienteId }: { pacienteId: string }) {
               placeholder="Ej: 7"
             />
           </Field>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <span className="mb-1.5 block text-sm font-medium text-foreground">
-                Dolor al defecar
-              </span>
-              <TriStateChips
-                value={h.dolorDefecar}
-                onChange={(v) => habito.set("dolorDefecar", v)}
-              />
-            </div>
-            <div>
-              <span className="mb-1.5 block text-sm font-medium text-foreground">
-                Sangrado
-              </span>
-              <TriStateChips
-                value={h.sangrado}
-                onChange={(v) => habito.set("sangrado", v)}
-              />
-            </div>
-          </div>
         </div>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+
+        <div className="mt-5 grid gap-x-6 gap-y-5 sm:grid-cols-2">
+          <ToggleField
+            label="Dolor al defecar"
+            value={h.dolorDefecar}
+            onChange={(v) => habito.set("dolorDefecar", v)}
+            detail={h.dolorDefecarDetalle}
+            onDetail={(v) => habito.set("dolorDefecarDetalle", v)}
+            placeholder="Intensidad, relación con las deposiciones…"
+          />
+          <ToggleField
+            label="Sangrado"
+            value={h.sangrado}
+            onChange={(v) => habito.set("sangrado", v)}
+            detail={h.sangradoDetalle}
+            onDetail={(v) => habito.set("sangradoDetalle", v)}
+            placeholder="Color, cantidad, relación con las deposiciones…"
+          />
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <Field label="Distensión abdominal">
             <Textarea
               value={h.distension}
@@ -132,39 +131,54 @@ export function ExpedienteNutricion({ pacienteId }: { pacienteId: string }) {
         title="Síntomas digestivos actuales"
         icon={<Stethoscope size={16} strokeWidth={1.75} />}
       >
-        <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          <ToggleCell
+        <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3">
+          <ToggleField
             label="Dolor abdominal"
             value={h.dolorAbdominal}
             onChange={(v) => habito.set("dolorAbdominal", v)}
+            detail={h.dolorAbdominalDetalle}
+            onDetail={(v) => habito.set("dolorAbdominalDetalle", v)}
+            placeholder="Localización, tipo, frecuencia…"
           />
-          <ToggleCell
+          <ToggleField
             label="Estreñimiento"
             value={h.estrenimiento}
             onChange={(v) => habito.set("estrenimiento", v)}
+            detail={h.estrenimientoDetalle}
+            onDetail={(v) => habito.set("estrenimientoDetalle", v)}
+            placeholder="Frecuencia, esfuerzo, consistencia…"
           />
-          <ToggleCell
+          <ToggleField
             label="Diarrea"
             value={h.diarrea}
             onChange={(v) => habito.set("diarrea", v)}
+            detail={h.diarreaDetalle}
+            onDetail={(v) => habito.set("diarreaDetalle", v)}
+            placeholder="Frecuencia, consistencia, moco o sangre…"
           />
-          <ToggleCell
+          <ToggleField
             label="Náusea / vómito"
             value={h.nauseaVomito}
             onChange={(v) => habito.set("nauseaVomito", v)}
+            detail={h.nauseaVomitoDetalle}
+            onDetail={(v) => habito.set("nauseaVomitoDetalle", v)}
+            placeholder="Frecuencia, relación con las comidas…"
           />
-          <ToggleCell
+          <ToggleField
             label="Pirosis / regurgitación"
             value={h.pirosis}
             onChange={(v) => habito.set("pirosis", v)}
+            detail={h.pirosisDetalle}
+            onDetail={(v) => habito.set("pirosisDetalle", v)}
+            placeholder="Frecuencia, relación con las comidas o la posición…"
           />
         </div>
-        <div className="mt-4">
+        <div className="mt-5">
           <Field label="Notas de síntomas">
             <Textarea
               value={h.sintomasNotas}
               onChange={(e) => habito.set("sintomasNotas", e.target.value)}
-              placeholder="Cronología, factores desencadenantes, intensidad…"
+              placeholder="Cronología, factores desencadenantes, impacto en la vida diaria…"
               className="min-h-[80px]"
             />
           </Field>

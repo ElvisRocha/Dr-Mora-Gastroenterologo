@@ -4,7 +4,7 @@ import { useExpediente } from "@/store/expedienteStore";
 import {
   ExpedienteFooter,
   Sec,
-  ToggleCell,
+  ToggleField,
   useExpedienteSection,
 } from "./formKit";
 
@@ -20,73 +20,50 @@ export function ExpedienteAntecedentes({ pacienteId }: { pacienteId: string }) {
     <div className="space-y-4">
       <Sec title="Antecedentes patológicos" icon={<Stethoscope size={16} strokeWidth={1.75} />}>
         <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 xl:grid-cols-3">
-          <ToggleCell
+          <ToggleField
             label="¿Padece alguna enfermedad crónica?"
             value={form.padeceEnfermedad}
             onChange={(v) => set("padeceEnfermedad", v)}
-          >
-            <Textarea
-              value={form.cualEnfermedad}
-              onChange={(e) => set("cualEnfermedad", e.target.value)}
-              placeholder="¿Cuál?"
-              className="min-h-[72px]"
-            />
-          </ToggleCell>
+            detail={form.cualEnfermedad}
+            onDetail={(v) => set("cualEnfermedad", v)}
+            placeholder="¿Cuál?"
+          />
 
-          <ToggleCell
+          <ToggleField
             label="¿Toma algún medicamento, suplemento o vitamina?"
             value={form.tomaMedicamentos}
             onChange={(v) => set("tomaMedicamentos", v)}
-          >
-            <Textarea
-              value={form.cualMedicamento}
-              onChange={(e) => set("cualMedicamento", e.target.value)}
-              placeholder="¿Cuál?"
-              className="min-h-[72px]"
-            />
-          </ToggleCell>
+            detail={form.cualMedicamento}
+            onDetail={(v) => set("cualMedicamento", v)}
+            placeholder="¿Cuál?"
+          />
 
-          <ToggleCell
+          <ToggleField
             label="¿Lo / la han operado?"
             value={form.haSidoOperado}
             onChange={(v) => set("haSidoOperado", v)}
-          >
-            <Textarea
-              value={form.cirugias}
-              onChange={(e) => set("cirugias", e.target.value)}
-              placeholder="¿De qué?"
-              className="min-h-[72px]"
-            />
-          </ToggleCell>
+            detail={form.cirugias}
+            onDetail={(v) => set("cirugias", v)}
+            placeholder="¿De qué?"
+          />
 
-          <ToggleCell
+          <ToggleField
             label="¿Ha estado hospitalizado(a)?"
             value={form.haSidoHospitalizado}
             onChange={(v) => set("haSidoHospitalizado", v)}
-          >
-            <Textarea
-              value={form.hospitalizaciones}
-              onChange={(e) => set("hospitalizaciones", e.target.value)}
-              placeholder="¿Motivo?"
-              className="min-h-[72px]"
-            />
-          </ToggleCell>
+            detail={form.hospitalizaciones}
+            onDetail={(v) => set("hospitalizaciones", v)}
+            placeholder="¿Motivo?"
+          />
 
-          <ToggleCell
+          <ToggleField
             label="Alergias a medicamentos o alimentos"
             value={form.tieneAlergias}
-            onChange={(v) => {
-              set("tieneAlergias", v);
-              if (!v) set("alergias", "");
-            }}
-          >
-            <Textarea
-              value={form.alergias}
-              onChange={(e) => set("alergias", e.target.value)}
-              placeholder="¿Cuáles?"
-              className="min-h-[72px]"
-            />
-          </ToggleCell>
+            onChange={(v) => set("tieneAlergias", v)}
+            detail={form.alergias}
+            onDetail={(v) => set("alergias", v)}
+            placeholder="¿Cuáles?"
+          />
         </div>
       </Sec>
 

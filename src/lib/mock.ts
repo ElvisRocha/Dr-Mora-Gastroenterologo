@@ -571,15 +571,22 @@ export type HabitoDigestivoMock = {
   bristolEscala: number;
   frecuenciaSemanal: number;
   dolorDefecar: boolean;
+  dolorDefecarDetalle: string;
   sangrado: boolean;
+  sangradoDetalle: string;
   distension: string;
   reflujo: string;
-  // Síntomas digestivos actuales (chip Sí/No)
+  // Síntomas digestivos actuales (chip Sí/No + detalle que se activa con "Sí")
   dolorAbdominal: TriState;
+  dolorAbdominalDetalle: string;
   estrenimiento: TriState;
+  estrenimientoDetalle: string;
   diarrea: TriState;
+  diarreaDetalle: string;
   nauseaVomito: TriState;
+  nauseaVomitoDetalle: string;
   pirosis: TriState;
+  pirosisDetalle: string;
   sintomasNotas: string;
 };
 
@@ -647,15 +654,22 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       bristolEscala: 4,
       frecuenciaSemanal: 7,
       dolorDefecar: false,
+      dolorDefecarDetalle: "",
       sangrado: false,
+      sangradoDetalle: "",
       distension: "Ocasional, postprandial",
       reflujo: "Reflujo silencioso ocasional",
       dolorAbdominal: false,
+      dolorAbdominalDetalle: "",
       estrenimiento: false,
+      estrenimientoDetalle: "",
       diarrea: false,
+      diarreaDetalle: "",
       nauseaVomito: false,
+      nauseaVomitoDetalle: "",
       pirosis: true,
-      sintomasNotas: "Regurgitaciones ocasionales tras tomas grandes; sin pérdida de peso.",
+      pirosisDetalle: "Regurgitaciones ocasionales tras tomas grandes; sin pérdida de peso.",
+      sintomasNotas: "Buen estado general; se indica fraccionar tomas y vigilar curva ponderal.",
     },
     alimentacion: {
       comidasPorDia: 5,
@@ -725,14 +739,21 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       bristolEscala: 4,
       frecuenciaSemanal: 7,
       dolorDefecar: false,
+      dolorDefecarDetalle: "",
       sangrado: false,
+      sangradoDetalle: "",
       distension: "Ausente con dieta libre de gluten",
       reflujo: "Sin episodios",
       dolorAbdominal: false,
+      dolorAbdominalDetalle: "",
       estrenimiento: false,
+      estrenimientoDetalle: "",
       diarrea: false,
+      diarreaDetalle: "",
       nauseaVomito: false,
+      nauseaVomitoDetalle: "",
       pirosis: false,
+      pirosisDetalle: "",
       sintomasNotas: "Asintomática con adherencia estricta a la dieta sin gluten.",
     },
     alimentacion: {
@@ -794,16 +815,22 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       bristolEscala: 5,
       frecuenciaSemanal: 14,
       dolorDefecar: true,
+      dolorDefecarDetalle: "Molestia al defecar durante los brotes.",
       sangrado: true,
+      sangradoDetalle: "Sangre roja con moco en las deposiciones durante los brotes.",
       distension: "Frecuente, asociada a brotes",
       reflujo: "Ausente",
       dolorAbdominal: true,
+      dolorAbdominalDetalle: "Cólico periumbilical, predominio postprandial.",
       estrenimiento: false,
+      estrenimientoDetalle: "",
       diarrea: true,
+      diarreaDetalle: "Hasta 4–6 deposiciones al día con moco durante los brotes.",
       nauseaVomito: false,
+      nauseaVomitoDetalle: "",
       pirosis: false,
-      sintomasNotas:
-        "Dolor abdominal cólico y diarrea con moco durante los brotes; astenia asociada.",
+      pirosisDetalle: "",
+      sintomasNotas: "Astenia asociada a los brotes; en control con hematología por anemia.",
     },
     alimentacion: {
       comidasPorDia: 4,
@@ -869,14 +896,21 @@ export const expedienteDefault: ExpedienteMock = {
     bristolEscala: 4,
     frecuenciaSemanal: 0,
     dolorDefecar: false,
+    dolorDefecarDetalle: "",
     sangrado: false,
+    sangradoDetalle: "",
     distension: "",
     reflujo: "",
     dolorAbdominal: null,
+    dolorAbdominalDetalle: "",
     estrenimiento: null,
+    estrenimientoDetalle: "",
     diarrea: null,
+    diarreaDetalle: "",
     nauseaVomito: null,
+    nauseaVomitoDetalle: "",
     pirosis: null,
+    pirosisDetalle: "",
     sintomasNotas: "",
   },
   alimentacion: {

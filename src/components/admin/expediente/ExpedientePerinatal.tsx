@@ -1,12 +1,12 @@
 import { Activity, Baby, Milk, Syringe } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Field, Input, Select, Textarea } from "@/components/ui/Input";
+import { Field, Input, Select } from "@/components/ui/Input";
 import { useExpediente } from "@/store/expedienteStore";
 import {
   ExpedienteFooter,
   Sec,
-  ToggleCell,
+  ToggleField,
   useExpedienteSection,
 } from "./formKit";
 
@@ -84,21 +84,14 @@ export function ExpedientePerinatal({ pacienteId }: { pacienteId: string }) {
             </Field>
           </div>
           <div className="mt-4">
-            <ToggleCell
+            <ToggleField
               label="¿Complicaciones durante el embarazo o parto?"
               value={form.complicacionesParto}
-              onChange={(v) => {
-                set("complicacionesParto", v);
-                if (!v) set("complicacionesDetalle", "");
-              }}
-            >
-              <Textarea
-                value={form.complicacionesDetalle}
-                onChange={(e) => set("complicacionesDetalle", e.target.value)}
-                placeholder="Prematuridad, ingreso a neonatos, ictericia, etc."
-                className="min-h-[72px]"
-              />
-            </ToggleCell>
+              onChange={(v) => set("complicacionesParto", v)}
+              detail={form.complicacionesDetalle}
+              onDetail={(v) => set("complicacionesDetalle", v)}
+              placeholder="Prematuridad, ingreso a neonatos, ictericia, etc."
+            />
           </div>
         </Sec>
 
@@ -106,18 +99,14 @@ export function ExpedientePerinatal({ pacienteId }: { pacienteId: string }) {
           title="Lactancia y alimentación temprana"
           icon={<Milk size={16} strokeWidth={1.75} />}
         >
-          <ToggleCell
+          <ToggleField
             label="¿Recibió lactancia materna?"
             value={form.lactanciaMaterna}
             onChange={(v) => set("lactanciaMaterna", v)}
-          >
-            <Textarea
-              value={form.lactancia}
-              onChange={(e) => set("lactancia", e.target.value)}
-              placeholder="Duración y detalle (ej: materna exclusiva 6 meses, luego fórmula)"
-              className="min-h-[72px]"
-            />
-          </ToggleCell>
+            detail={form.lactancia}
+            onDetail={(v) => set("lactancia", v)}
+            placeholder="Duración y detalle (ej: materna exclusiva 6 meses, luego fórmula)"
+          />
           <div className="mt-4">
             <Field label="Edad de ablactación / introducción de sólidos (meses)">
               <Input
@@ -142,36 +131,29 @@ export function ExpedientePerinatal({ pacienteId }: { pacienteId: string }) {
           title="Desarrollo psicomotor"
           icon={<Activity size={16} strokeWidth={1.75} />}
         >
-          <ToggleCell
+          <ToggleField
             label="¿Desarrollo acorde a la edad?"
             value={form.desarrolloAcorde}
             onChange={(v) => set("desarrolloAcorde", v)}
-          >
-            <Textarea
-              value={form.hitos}
-              onChange={(e) => set("hitos", e.target.value)}
-              placeholder="Hitos: sostén cefálico, sedestación, marcha, primeras palabras, control de esfínteres…"
-              className="min-h-[96px]"
-            />
-          </ToggleCell>
+            detail={form.hitos}
+            onDetail={(v) => set("hitos", v)}
+            placeholder="Hitos: sostén cefálico, sedestación, marcha, primeras palabras, control de esfínteres…"
+            minH="min-h-[96px]"
+          />
         </Sec>
 
         <Sec
           title="Esquema de vacunación"
           icon={<Syringe size={16} strokeWidth={1.75} />}
         >
-          <ToggleCell
+          <ToggleField
             label="¿Esquema de vacunación completo para la edad?"
             value={form.esquemaCompleto}
             onChange={(v) => set("esquemaCompleto", v)}
-          >
-            <Textarea
-              value={form.vacunasNotas}
-              onChange={(e) => set("vacunasNotas", e.target.value)}
-              placeholder="Notas: pendientes, refuerzos, vacunas no incluidas en el esquema nacional…"
-              className="min-h-[72px]"
-            />
-          </ToggleCell>
+            detail={form.vacunasNotas}
+            onDetail={(v) => set("vacunasNotas", v)}
+            placeholder="Notas: pendientes, refuerzos, vacunas no incluidas en el esquema nacional…"
+          />
 
           {exp.vacunas.length > 0 ? (
             <div className="mt-4">

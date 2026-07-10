@@ -8,9 +8,11 @@ import {
 import { createPortal } from "react-dom";
 import { Check, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Input";
 import { TriStateChips } from "@/components/ui/TriStateChips";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useExpedienteEditable } from "@/store/expedienteStore";
+import { cn } from "@/lib/cn";
 import type { ExpedienteMock, TriState } from "@/lib/mock";
 
 // ─── Estado editable de una sección del expediente ─────────────────────────
@@ -152,6 +154,49 @@ export function ToggleCell({
         <TriStateChips value={value} onChange={onChange} className="shrink-0" />
       </div>
       {children ? <div className="mt-1">{children}</div> : null}
+    </div>
+  );
+}
+
+/**
+ * Chip Sí/No con un textarea de detalle debajo que solo se **activa** cuando la
+ * respuesta es "Sí"; con "No" o sin responder queda deshabilitado y atenuado.
+ * Así el detalle se recaba únicamente cuando corresponde.
+ */
+export function ToggleField({
+  label,
+  value,
+  onChange,
+  detail,
+  onDetail,
+  placeholder,
+  minH = "min-h-[72px]",
+}: {
+  label: string;
+  value: TriState | undefined;
+  onChange: (v: boolean) => void;
+  detail: string;
+  onDetail: (v: string) => void;
+  placeholder: string;
+  minH?: string;
+}) {
+  const active = value === true;
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-start justify-between gap-2">
+        <span className="text-sm font-medium leading-tight text-foreground">
+          {label}
+        </span>
+        <TriStateChips value={value} onChange={onChange} className="shrink-0" />
+      </div>
+      <Textarea
+        value={detail}
+        onChange={(e) => onDetail(e.target.value)}
+        placeholder={active ? placeholder : 'Seleccione “Sí” para agregar detalle'}
+        disabled={!active}
+        aria-disabled={!active}
+        className={cn(minH, !active && "bg-muted/40")}
+      />
     </div>
   );
 }

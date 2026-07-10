@@ -20,23 +20,23 @@ type AuthState = {
 const MOCK_KEY = "gastrokids:mockauth";
 
 const MOCK_USERS: Record<string, AuthUser & { password: string }> = {
-  "admin@gastrokids.mx": {
+  "admin@gastrokids.cr": {
     id: "u-admin",
-    email: "admin@gastrokids.mx",
+    email: "admin@gastrokids.cr",
     nombre: "Admin Gastro Kids",
     roles: ["admin", "doctor", "secretaria"],
     password: "admin123",
   },
-  "dr.mora@gastrokids.mx": {
+  "dr.mora@gastrokids.cr": {
     id: "u-doctor",
-    email: "dr.mora@gastrokids.mx",
+    email: "dr.mora@gastrokids.cr",
     nombre: "Dr. Alfredo Mora",
     roles: ["doctor"],
     password: "doctor123",
   },
-  "secretaria@gastrokids.mx": {
+  "secretaria@gastrokids.cr": {
     id: "u-sec",
-    email: "secretaria@gastrokids.mx",
+    email: "secretaria@gastrokids.cr",
     nombre: "Recepción Gastro Kids",
     roles: ["secretaria"],
     password: "sec123",

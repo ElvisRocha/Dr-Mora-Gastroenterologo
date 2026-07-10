@@ -29,7 +29,7 @@ const trayectoria = {
     {
       anos: "2020 — actual",
       titulo: "Práctica clínica privada y hospitalaria",
-      institucion: "Gastro Kids · Ciudad de México",
+      institucion: "Gastro Kids · San José, Costa Rica",
     },
   ],
   en: [

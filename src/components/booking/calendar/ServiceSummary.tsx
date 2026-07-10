@@ -40,7 +40,7 @@ export function ServiceSummary({ servicioSlug }: Props) {
 
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Globe size={14} strokeWidth={1.75} className="shrink-0" />
-          <span>America/Mexico_City</span>
+          <span>America/Costa_Rica</span>
         </div>
       </div>
     </div>

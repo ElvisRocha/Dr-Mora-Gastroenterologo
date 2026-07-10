@@ -385,7 +385,7 @@ function AddEsperaModal({
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Teléfono" required>
-            <Input value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="+52 55 0000 0000" />
+            <Input value={telefono} onChange={(e) => setTelefono(e.target.value)} placeholder="+506 8888-8888" />
           </Field>
           <Field label="Prioridad">
             <Select value={prioridad} onChange={(e) => setPrioridad(e.target.value as PrioridadEspera)}>

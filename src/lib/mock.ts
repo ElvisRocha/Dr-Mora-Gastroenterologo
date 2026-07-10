@@ -184,7 +184,7 @@ export const doctorPortrait =
   "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=640&h=800&fit=crop&auto=format&q=80";
 
 export const whatsappLink =
-  "https://wa.me/525555555555?text=Hola%2C%20me%20gustar%C3%ADa%20agendar%20una%20cita%20para%20mi%20hijo%2Fa.";
+  "https://wa.me/50688443322?text=Hola%2C%20me%20gustar%C3%ADa%20agendar%20una%20cita%20para%20mi%20hijo%2Fa.";
 
 export type MedicamentoMock = {
   nombre: string;
@@ -249,8 +249,8 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-04-22",
     proximaCita: "2026-05-08",
     tutorPrincipal: "Marisol Aguirre",
-    telefonoTutor: "+52 55 4729 1834",
-    email: "marisol.aguirre@correo.mx",
+    telefonoTutor: "+506 8729-1834",
+    email: "marisol.aguirre@correo.cr",
     medicamentosActivos: [
       { nombre: "Omeprazol", dosis: "5 mg", frecuencia: "1 vez/día", inicio: "2026-01-15" },
       { nombre: "Fórmula extensamente hidrolizada", dosis: "120 ml", frecuencia: "Cada 4 h" },
@@ -270,8 +270,8 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-03-18",
     proximaCita: "2026-05-12",
     tutorPrincipal: "Iván Reyes",
-    telefonoTutor: "+52 55 6118 2247",
-    email: "ivan.reyes@correo.mx",
+    telefonoTutor: "+506 7118-2247",
+    email: "ivan.reyes@correo.cr",
     medicamentosActivos: [
       { nombre: "Multivitamínico pediátrico", dosis: "1 tableta", frecuencia: "1 vez/día" },
     ],
@@ -287,8 +287,8 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-04-29",
     proximaCita: "2026-05-15",
     tutorPrincipal: "Patricia Krauss",
-    telefonoTutor: "+52 55 8472 9136",
-    email: "patricia.k@correo.mx",
+    telefonoTutor: "+506 6472-9136",
+    email: "patricia.k@correo.cr",
     medicamentosActivos: [
       { nombre: "Mesalazina", dosis: "800 mg", frecuencia: "3 veces/día" },
       { nombre: "Hierro polimaltosado", dosis: "100 mg", frecuencia: "1 vez/día" },
@@ -308,8 +308,8 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-04-15",
     proximaCita: "2026-05-19",
     tutorPrincipal: "Roberto Solórzano",
-    telefonoTutor: "+52 55 3194 8472",
-    email: "roberto.s@correo.mx",
+    telefonoTutor: "+506 7194-8472",
+    email: "roberto.s@correo.cr",
   },
   {
     id: "p-005",
@@ -322,7 +322,7 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-04-08",
     proximaCita: "2026-06-02",
     tutorPrincipal: "Andrea Villalpando",
-    telefonoTutor: "+52 55 7384 1928",
+    telefonoTutor: "+506 8384-1928",
   },
   {
     id: "p-006",
@@ -334,7 +334,7 @@ const pacientesBase: PacienteMock[] = [
     diagnosticosActivos: ["Dispepsia funcional"],
     ultimaConsulta: "2026-04-30",
     tutorPrincipal: "Cecilia Lara",
-    telefonoTutor: "+52 55 4729 6612",
+    telefonoTutor: "+506 8729-6612",
   },
   {
     id: "p-007",
@@ -347,7 +347,7 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-03-04",
     proximaCita: "2026-05-20",
     tutorPrincipal: "Mariana Rincón",
-    telefonoTutor: "+52 55 9183 4729",
+    telefonoTutor: "+506 7183-4729",
   },
   {
     id: "p-008",
@@ -359,8 +359,8 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-04-26",
     proximaCita: "2026-05-09",
     tutorPrincipal: "Esteban Bautista",
-    telefonoTutor: "+52 55 6612 8472",
-    email: "e.bautista@correo.mx",
+    telefonoTutor: "+506 7612-8472",
+    email: "e.bautista@correo.cr",
   },
   {
     id: "p-009",
@@ -373,7 +373,7 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-04-17",
     proximaCita: "2026-05-06",
     tutorPrincipal: "Verónica Santos",
-    telefonoTutor: "+52 55 8472 1928",
+    telefonoTutor: "+506 6472-1928",
   },
   {
     id: "p-010",
@@ -386,7 +386,7 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-03-22",
     proximaCita: "2026-05-22",
     tutorPrincipal: "Fernando Higuera",
-    telefonoTutor: "+52 55 1928 4729",
+    telefonoTutor: "+506 7928-4729",
   },
   {
     id: "p-011",
@@ -398,7 +398,7 @@ const pacientesBase: PacienteMock[] = [
     diagnosticosActivos: ["Selectividad alimentaria"],
     ultimaConsulta: "2026-04-12",
     tutorPrincipal: "Jimena Vergara",
-    telefonoTutor: "+52 55 2734 6612",
+    telefonoTutor: "+506 8734-6612",
   },
   {
     id: "p-012",
@@ -411,7 +411,7 @@ const pacientesBase: PacienteMock[] = [
     ultimaConsulta: "2026-04-05",
     proximaCita: "2026-05-13",
     tutorPrincipal: "Lucía Olvera",
-    telefonoTutor: "+52 55 6118 9472",
+    telefonoTutor: "+506 7118-9472",
   },
 ];
 
@@ -619,14 +619,14 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       {
         nombre: "Marisol Aguirre",
         relacion: "madre",
-        telefono: "+52 55 4729 1834",
-        email: "marisol.aguirre@correo.mx",
+        telefono: "+506 8729-1834",
+        email: "marisol.aguirre@correo.cr",
         principal: true,
       },
       {
         nombre: "Daniel Pérez",
         relacion: "padre",
-        telefono: "+52 55 6118 8472",
+        telefono: "+506 7118-8472",
         principal: false,
       },
     ],
@@ -665,15 +665,15 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       alimentosRechazados: [],
     },
     vacunas: [
-      { nombre: "Esquema completo cartilla mexicana", fecha: "2014-2024" },
+      { nombre: "Esquema nacional de vacunación completo", fecha: "2014-2024" },
       { nombre: "VPH (1ª dosis)", fecha: "2025-08-12", refuerzo: "2026-02-12" },
     ],
     tutores: [
       {
         nombre: "Iván Reyes",
         relacion: "padre",
-        telefono: "+52 55 6118 2247",
-        email: "ivan.reyes@correo.mx",
+        telefono: "+506 7118-2247",
+        email: "ivan.reyes@correo.cr",
         principal: true,
       },
     ],
@@ -713,7 +713,7 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       alimentosRechazados: ["Lácteos enteros", "Granos integrales"],
     },
     vacunas: [
-      { nombre: "Esquema completo cartilla mexicana", fecha: "2008-2018" },
+      { nombre: "Esquema nacional de vacunación completo", fecha: "2008-2018" },
       { nombre: "Influenza anual", fecha: "2025-11-04" },
       { nombre: "Hepatitis A refuerzo", fecha: "2024-09-15" },
     ],
@@ -721,14 +721,14 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       {
         nombre: "Patricia Krauss",
         relacion: "madre",
-        telefono: "+52 55 8472 9136",
-        email: "patricia.k@correo.mx",
+        telefono: "+506 6472-9136",
+        email: "patricia.k@correo.cr",
         principal: true,
       },
       {
         nombre: "Esteban Patiño",
         relacion: "padre",
-        telefono: "+52 55 1845 9072",
+        telefono: "+506 7845-9072",
         principal: false,
       },
     ],

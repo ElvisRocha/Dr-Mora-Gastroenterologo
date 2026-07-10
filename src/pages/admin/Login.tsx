@@ -24,7 +24,7 @@ export default function Login() {
   const location = useLocation();
   const from = (location.state as { from?: Location })?.from?.pathname ?? "/admin/dashboard";
 
-  const [email, setEmail] = useState("admin@gastrokids.mx");
+  const [email, setEmail] = useState("admin@gastrokids.cr");
   const [password, setPassword] = useState("admin123");
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);

@@ -177,7 +177,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-001",
     canal: "whatsapp",
-    telefono: "+52 55 4729 1834",
+    telefono: "+506 8729-1834",
     contactoNombre: "Marisol Aguirre",
     pacienteId: "p-001",
     categoria: "confirmadas",
@@ -191,7 +191,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-002",
     canal: "whatsapp",
-    telefono: "+52 55 6118 2247",
+    telefono: "+506 7118-2247",
     contactoNombre: "Iván Reyes",
     pacienteId: "p-002",
     categoria: "agendadas",
@@ -203,7 +203,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-003",
     canal: "whatsapp",
-    telefono: "+52 55 8472 9136",
+    telefono: "+506 6472-9136",
     contactoNombre: "Patricia Krauss",
     pacienteId: "p-003",
     categoria: "pendiente_confirmar",
@@ -216,7 +216,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-004",
     canal: "instagram",
-    telefono: "+52 55 2984 5510",
+    telefono: "+506 8984-5510",
     contactoNombre: "Gabriela Fuentes",
     pacienteNombre: "Emma (2 años)",
     categoria: "leads",
@@ -226,7 +226,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-005",
     canal: "whatsapp",
-    telefono: "+52 55 3194 8472",
+    telefono: "+506 7194-8472",
     contactoNombre: "Roberto Solórzano",
     pacienteId: "p-004",
     categoria: "confirmadas",
@@ -239,7 +239,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-006",
     canal: "whatsapp",
-    telefono: "+52 55 6612 8472",
+    telefono: "+506 7612-8472",
     contactoNombre: "Esteban Bautista",
     pacienteId: "p-008",
     categoria: "agendadas",
@@ -251,7 +251,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-007",
     canal: "whatsapp",
-    telefono: "+52 55 7712 3390",
+    telefono: "+506 8712-3390",
     contactoNombre: "Lorena Cepeda",
     pacienteNombre: "Diego (7 años)",
     categoria: "leads",
@@ -261,7 +261,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-008",
     canal: "whatsapp",
-    telefono: "+52 55 9183 4729",
+    telefono: "+506 7183-4729",
     contactoNombre: "Mariana Rincón",
     pacienteId: "p-007",
     categoria: "canceladas",
@@ -273,7 +273,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-009",
     canal: "whatsapp",
-    telefono: "+52 55 7384 1928",
+    telefono: "+506 8384-1928",
     contactoNombre: "Andrea Villalpando",
     pacienteId: "p-005",
     categoria: "completadas",
@@ -285,7 +285,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-010",
     canal: "facebook",
-    telefono: "+52 55 5540 1177",
+    telefono: "+506 6540-1177",
     contactoNombre: "Paola Nieto",
     pacienteNombre: "Sebastián (5 meses)",
     categoria: "leads",
@@ -295,7 +295,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-011",
     canal: "whatsapp",
-    telefono: "+52 55 6118 9472",
+    telefono: "+506 7118-9472",
     contactoNombre: "Lucía Olvera",
     pacienteId: "p-012",
     categoria: "agendadas",
@@ -307,7 +307,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   {
     id: "cv-012",
     canal: "whatsapp",
-    telefono: "+52 55 8472 1928",
+    telefono: "+506 6472-1928",
     contactoNombre: "Verónica Santos",
     pacienteId: "p-009",
     categoria: "confirmadas",

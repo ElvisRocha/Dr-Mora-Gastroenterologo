@@ -295,9 +295,9 @@ export const en: Dictionary = {
     studio: "SmartFlow Automations",
     contact: {
       titulo: "Contact",
-      phones: ["+52 55 5555 5555", "+52 55 4444 4444"],
-      email: "contacto@gastrokids.mx",
-      address: "Av. Reforma 1234, 8th floor, Cuauhtémoc, 06600, Mexico City",
+      phones: ["+506 8844-3322", "+506 2280-4455"],
+      email: "contacto@gastrokids.cr",
+      address: "Av. Escazú, Medical Tower, 4th floor, Escazú, San José, Costa Rica",
     },
     hours: {
       titulo: "Hours",
@@ -309,9 +309,9 @@ export const en: Dictionary = {
       ],
     },
     social: {
-      instagram: "https://instagram.com/gastrokids.mx",
-      facebook: "https://facebook.com/gastrokids.mx",
-      tiktok: "https://tiktok.com/@gastrokids.mx",
+      instagram: "https://instagram.com/gastrokids.cr",
+      facebook: "https://facebook.com/gastrokids.cr",
+      tiktok: "https://tiktok.com/@gastrokids.cr",
     },
   },
   booking: {

@@ -55,5 +55,5 @@ create table if not exists site_settings (
 );
 
 insert into site_settings (id, booking_enabled, idioma_default, email_contacto)
-values (1, true, 'es', 'contacto@gastrokids.mx')
+values (1, true, 'es', 'contacto@gastrokids.cr')
 on conflict (id) do nothing;

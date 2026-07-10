@@ -17,7 +17,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Construye rango startDate/endDate (UTC ms) para el día solicitado\nconst body = $input.first().json.body ?? $input.first().json;\nconst fecha = body.fecha; // 'YYYY-MM-DD'\nconst tz = body.timezone || 'America/Mexico_City';\nconst servicioSlug = body.servicio_slug;\n\nconst start = new Date(`${fecha}T00:00:00${tzOffset(tz)}`).getTime();\nconst end = new Date(`${fecha}T23:59:59${tzOffset(tz)}`).getTime();\n\nfunction tzOffset() { return '-06:00'; }\n\nreturn [{\n  json: {\n    fecha,\n    servicio_slug: servicioSlug,\n    timezone: tz,\n    start_ms: start,\n    end_ms: end\n  }\n}];"
+        "jsCode": "// Construye rango startDate/endDate (UTC ms) para el día solicitado\nconst body = $input.first().json.body ?? $input.first().json;\nconst fecha = body.fecha; // 'YYYY-MM-DD'\nconst tz = body.timezone || 'America/Costa_Rica';\nconst servicioSlug = body.servicio_slug;\n\nconst start = new Date(`${fecha}T00:00:00${tzOffset(tz)}`).getTime();\nconst end = new Date(`${fecha}T23:59:59${tzOffset(tz)}`).getTime();\n\nfunction tzOffset() { return '-06:00'; }\n\nreturn [{\n  json: {\n    fecha,\n    servicio_slug: servicioSlug,\n    timezone: tz,\n    start_ms: start,\n    end_ms: end\n  }\n}];"
       },
       "id": "2",
       "name": "Preparar Rango",
@@ -53,7 +53,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Filtra y normaliza slots a HH:mm en zona local del consultorio\nconst raw = $input.first().json;\nconst tz = $('Preparar Rango').first().json.timezone;\nconst fecha = $('Preparar Rango').first().json.fecha;\n\nconst slotsEntrada = raw[Object.keys(raw)[0]]?.slots ?? raw.slots ?? [];\n\nconst toLocal = (iso) => new Intl.DateTimeFormat('es-MX', {\n  hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz\n}).format(new Date(iso));\n\nconst out = slotsEntrada.map(s => ({\n  start: `${fecha}T${toLocal(s)}:00`,\n  end: `${fecha}T${toLocal(s)}:00`\n}));\n\nreturn [{ json: { slots: out } }];"
+        "jsCode": "// Filtra y normaliza slots a HH:mm en zona local del consultorio\nconst raw = $input.first().json;\nconst tz = $('Preparar Rango').first().json.timezone;\nconst fecha = $('Preparar Rango').first().json.fecha;\n\nconst slotsEntrada = raw[Object.keys(raw)[0]]?.slots ?? raw.slots ?? [];\n\nconst toLocal = (iso) => new Intl.DateTimeFormat('es-CR', {\n  hour: '2-digit', minute: '2-digit', hour12: false, timeZone: tz\n}).format(new Date(iso));\n\nconst out = slotsEntrada.map(s => ({\n  start: `${fecha}T${toLocal(s)}:00`,\n  end: `${fecha}T${toLocal(s)}:00`\n}));\n\nreturn [{ json: { slots: out } }];"
       },
       "id": "4",
       "name": "Normalizar Slots",

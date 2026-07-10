@@ -138,8 +138,8 @@ export const CATEGORIAS_TABLERO: {
 
 export function formatTelefono(tel: string): string {
   const d = tel.replace(/\D/g, "");
-  if (d.length === 12 && d.startsWith("52")) {
-    return `+52 ${d.slice(2, 4)} ${d.slice(4, 8)} ${d.slice(8)}`;
+  if (d.length === 11 && d.startsWith("506")) {
+    return `+506 ${d.slice(3, 7)}-${d.slice(7)}`;
   }
   return tel;
 }

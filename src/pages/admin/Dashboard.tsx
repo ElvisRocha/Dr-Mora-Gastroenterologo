@@ -13,6 +13,7 @@ import {
   AreaChart,
   Bar,
   BarChart,
+  CartesianGrid,
   Cell,
   LabelList,
   Legend,
@@ -297,18 +298,40 @@ function IngresosDrill({ f }: { f: FiltroState }) {
       />
       <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={rows} margin={{ top: 20, right: 8, bottom: 0, left: 4 }} onClick={(e: any) => {
-            if (clickable && e && e.activeTooltipIndex != null && rows[e.activeTooltipIndex]) onBar(rows[e.activeTooltipIndex].bucket);
-          }}>
-            <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: C.muted }} interval={0} />
-            <YAxis tickFormatter={CRC_K} tickLine={false} axisLine={false} width={48} tick={{ fontSize: 11, fill: C.muted }} />
-            <Tooltip cursor={{ fill: "rgba(0,0,0,0.03)" }} content={<DrillTooltip />} />
-            <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
-            <Bar dataKey="realizado" name="Realizado" stackId="ing" fill={SERIE.realizado} maxBarSize={46} cursor={clickable ? "pointer" : "default"} />
-            <Bar dataKey="proyectado" name="Proyectado" stackId="ing" fill={SERIE.proyectado} radius={[4, 4, 0, 0]} maxBarSize={46} cursor={clickable ? "pointer" : "default"}>
-              <LabelList dataKey="realizado" content={(props: any) => <StackTotal {...props} rows={rows} />} />
-            </Bar>
-          </BarChart>
+          {drill.level === "day" ? (
+            <AreaChart data={rows} margin={{ top: 26, right: 16, bottom: 0, left: 4 }}>
+              <defs>
+                <linearGradient id="gReal" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={SERIE.realizado} stopOpacity={0.28} />
+                  <stop offset="100%" stopColor={SERIE.realizado} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: C.muted }} interval={0} />
+              <YAxis tickFormatter={CRC_K} tickLine={false} axisLine={false} width={48} tick={{ fontSize: 11, fill: C.muted }} />
+              <Tooltip content={<DrillTooltip />} />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+              <Area type="monotone" dataKey="realizado" name="Realizado" stroke={SERIE.realizado} strokeWidth={2} fill="url(#gReal)" dot={{ r: 3, fill: SERIE.realizado, strokeWidth: 0 }} activeDot={{ r: 4 }} isAnimationActive={false}>
+                <LabelList content={(props: any) => <AreaTotal {...props} rows={rows} which="realizado" />} />
+              </Area>
+              <Area type="monotone" dataKey="proyectado" name="Proyectado" stroke={SERIE.proyectado} strokeWidth={2} strokeDasharray="4 3" fill="transparent" dot={{ r: 3, fill: SERIE.proyectado, strokeWidth: 0 }} activeDot={{ r: 4 }} isAnimationActive={false}>
+                <LabelList content={(props: any) => <AreaTotal {...props} rows={rows} which="proyectado" />} />
+              </Area>
+            </AreaChart>
+          ) : (
+            <BarChart data={rows} margin={{ top: 20, right: 8, bottom: 0, left: 4 }} onClick={(e: any) => {
+              if (clickable && e && e.activeTooltipIndex != null && rows[e.activeTooltipIndex]) onBar(rows[e.activeTooltipIndex].bucket);
+            }}>
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: C.muted }} interval={0} />
+              <YAxis tickFormatter={CRC_K} tickLine={false} axisLine={false} width={48} tick={{ fontSize: 11, fill: C.muted }} />
+              <Tooltip cursor={{ fill: "rgba(0,0,0,0.03)" }} content={<DrillTooltip />} />
+              <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
+              <Bar dataKey="realizado" name="Realizado" stackId="ing" fill={SERIE.realizado} maxBarSize={46} cursor={clickable ? "pointer" : "default"} />
+              <Bar dataKey="proyectado" name="Proyectado" stackId="ing" fill={SERIE.proyectado} radius={[4, 4, 0, 0]} maxBarSize={46} cursor={clickable ? "pointer" : "default"}>
+                <LabelList dataKey="realizado" content={(props: any) => <StackTotal {...props} rows={rows} />} />
+              </Bar>
+            </BarChart>
+          )}
         </ResponsiveContainer>
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">
@@ -325,6 +348,23 @@ function StackTotal({ x, y, width, index, rows }: any) {
   if (total <= 0) return null;
   return (
     <text x={x + width / 2} y={y - 5} textAnchor="middle" fontSize={10} fill={C.muted} fontWeight={600}>
+      {CRC_K(total)}
+    </text>
+  );
+}
+
+// Etiqueta de total por punto en la vista de área (nivel día).
+function AreaTotal({ x, y, index, rows, which }: any) {
+  const row = rows[index];
+  if (!row) return null;
+  const total = row.realizado + row.proyectado;
+  if (total <= 0) return null;
+  // Evita doble etiqueta el día frontera: realizado la muestra siempre;
+  // proyectado solo cuando ese día no tiene realizado.
+  if (which === "proyectado" && row.realizado > 0) return null;
+  if (which === "realizado" && row.realizado === 0) return null;
+  return (
+    <text x={x} y={y - 10} textAnchor="middle" fontSize={10} fill={C.muted} fontWeight={600}>
       {CRC_K(total)}
     </text>
   );

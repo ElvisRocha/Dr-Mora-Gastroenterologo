@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  Activity,
   ArrowLeft,
+  Baby,
   Calendar,
   ClipboardList,
   FileText,
@@ -10,7 +10,9 @@ import {
   Pencil,
   Phone,
   Plus,
+  Stethoscope,
   TrendingUp,
+  Utensils,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -21,8 +23,9 @@ import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { ExpedienteResumen } from "@/components/admin/expediente/ExpedienteResumen";
 import { ExpedienteAntecedentes } from "@/components/admin/expediente/ExpedienteAntecedentes";
+import { ExpedientePerinatal } from "@/components/admin/expediente/ExpedientePerinatal";
+import { ExpedienteNutricion } from "@/components/admin/expediente/ExpedienteNutricion";
 import { ExpedienteCrecimiento } from "@/components/admin/expediente/ExpedienteCrecimiento";
-import { ExpedienteHabitoDigestivo } from "@/components/admin/expediente/ExpedienteHabitoDigestivo";
 import { ExpedienteConsultas } from "@/components/admin/expediente/ExpedienteConsultas";
 import { ExpedienteCitas } from "@/components/admin/expediente/ExpedienteCitas";
 import { EditarPacienteModal } from "@/components/admin/EditarPacienteModal";
@@ -32,17 +35,19 @@ import { ConsultationTimer } from "@/components/admin/expediente/ConsultationTim
 type TabKey =
   | "resumen"
   | "antecedentes"
+  | "perinatal"
+  | "nutricion"
   | "crecimiento"
-  | "habito"
   | "consultas"
   | "citas";
 
 const TABS: { key: TabKey; label: string; icon: typeof Calendar }[] = [
   { key: "resumen", label: "Resumen", icon: ClipboardList },
   { key: "antecedentes", label: "Antecedentes", icon: FileText },
+  { key: "perinatal", label: "Perinatal y desarrollo", icon: Baby },
+  { key: "nutricion", label: "Nutrición y digestivo", icon: Utensils },
   { key: "crecimiento", label: "Crecimiento", icon: TrendingUp },
-  { key: "habito", label: "Hábito digestivo", icon: Activity },
-  { key: "consultas", label: "Consultas", icon: FileText },
+  { key: "consultas", label: "Consultas", icon: Stethoscope },
   { key: "citas", label: "Citas", icon: Calendar },
 ];
 
@@ -68,11 +73,10 @@ export default function PacienteDetalle() {
     );
   }
 
-  const sexoLabel =
-    paciente.sexo === "femenino" ? "Femenino" : "Masculino";
+  const sexoLabel = paciente.sexo === "femenino" ? "Femenino" : "Masculino";
 
   return (
-    <div className="space-y-6">
+    <div className="flex min-h-[calc(100dvh-9rem)] flex-col gap-6">
       <Link
         to="/admin/pacientes"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -160,7 +164,7 @@ export default function PacienteDetalle() {
         <div
           role="tablist"
           aria-label="Expediente"
-          className="inline-flex w-auto min-w-full gap-1 rounded-xl bg-muted/50 p-1 sm:w-full"
+          className="inline-flex w-auto min-w-full gap-1 rounded-xl bg-muted/50 p-1"
         >
           {TABS.map((t) => {
             const active = tab === t.key;
@@ -187,18 +191,23 @@ export default function PacienteDetalle() {
         </div>
       </div>
 
-      <div className="animate-fade-up">
+      {/* key por paciente: reinicia el estado local de cada pestaña al cambiar
+          de expediente (borradores, listas por coma, etc.). */}
+      <div key={paciente.id} className="animate-fade-up">
         {tab === "resumen" ? (
           <ExpedienteResumen pacienteId={paciente.id} />
         ) : null}
         {tab === "antecedentes" ? (
           <ExpedienteAntecedentes pacienteId={paciente.id} />
         ) : null}
+        {tab === "perinatal" ? (
+          <ExpedientePerinatal pacienteId={paciente.id} />
+        ) : null}
+        {tab === "nutricion" ? (
+          <ExpedienteNutricion pacienteId={paciente.id} />
+        ) : null}
         {tab === "crecimiento" ? (
           <ExpedienteCrecimiento pacienteId={paciente.id} />
-        ) : null}
-        {tab === "habito" ? (
-          <ExpedienteHabitoDigestivo pacienteId={paciente.id} />
         ) : null}
         {tab === "consultas" ? (
           <ExpedienteConsultas
@@ -208,6 +217,14 @@ export default function PacienteDetalle() {
         ) : null}
         {tab === "citas" ? <ExpedienteCitas pacienteId={paciente.id} /> : null}
       </div>
+
+      {/* Pie fijo del expediente. Cada pestaña editable (Antecedentes,
+          Perinatal, Nutrición) teletransporta aquí su botón Guardar + estado
+          de autoguardado. Vacío ⇒ oculto. */}
+      <div
+        id="expediente-footer-slot"
+        className="sticky bottom-0 z-20 -mx-5 -mb-6 mt-auto flex items-center justify-end gap-3 border-t border-border bg-card/95 px-5 py-3 backdrop-blur-sm empty:hidden md:-mx-6 md:-mb-8 md:px-6"
+      />
 
       <EditarPacienteModal
         pacienteId={paciente.id}

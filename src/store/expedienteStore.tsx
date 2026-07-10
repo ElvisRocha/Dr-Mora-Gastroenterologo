@@ -29,6 +29,7 @@ type Snapshot = {
   pacientesExtra: PacienteMock[];
   consultasExtra: ConsultaMock[];
   consultaOverrides: Record<string, Partial<ConsultaMock>>;
+  expedienteOverrides: Record<string, Partial<ExpedienteMock>>;
   archivos: ArchivoMock[];
   notas: NotaBitacoraMock[];
 };
@@ -38,6 +39,7 @@ const emptySnapshot: Snapshot = {
   pacientesExtra: [],
   consultasExtra: [],
   consultaOverrides: {},
+  expedienteOverrides: {},
   archivos: [],
   notas: [],
 };
@@ -52,6 +54,7 @@ type StoreContextValue = {
   addConsulta: (consulta: ConsultaMock) => void;
   updateConsulta: (consultaId: string, patch: Partial<ConsultaMock>) => void;
   getExpediente: (pacienteId: string) => ExpedienteMock;
+  updateExpediente: (pacienteId: string, patch: Partial<ExpedienteMock>) => void;
 
   listArchivos: (consultaId: string) => ArchivoMock[];
   addArchivo: (archivo: ArchivoMock) => void;
@@ -75,6 +78,7 @@ function readSnapshot(): Snapshot {
       pacientesExtra: parsed.pacientesExtra ?? [],
       consultasExtra: parsed.consultasExtra ?? [],
       consultaOverrides: parsed.consultaOverrides ?? {},
+      expedienteOverrides: parsed.expedienteOverrides ?? {},
       archivos: parsed.archivos ?? [],
       notas: parsed.notas ?? [],
     };
@@ -204,8 +208,27 @@ export function ExpedienteStoreProvider({ children }: { children: ReactNode }) {
   );
 
   const getExpediente = useCallback(
-    (pacienteId: string): ExpedienteMock =>
-      expedientesMock[pacienteId] ?? expedienteDefault,
+    (pacienteId: string): ExpedienteMock => {
+      const base = expedientesMock[pacienteId] ?? expedienteDefault;
+      const override = snap.expedienteOverrides[pacienteId];
+      // Merge superficial por sección: cada pestaña editable guarda su sección
+      // completa (antecedentes, perinatal, habitoDigestivo…), así que basta con
+      // reemplazar las claves de primer nivel presentes en el override.
+      return override ? { ...base, ...override } : base;
+    },
+    [snap.expedienteOverrides],
+  );
+
+  const updateExpediente = useCallback(
+    (pacienteId: string, patch: Partial<ExpedienteMock>) => {
+      setSnap((prev) => ({
+        ...prev,
+        expedienteOverrides: {
+          ...prev.expedienteOverrides,
+          [pacienteId]: { ...prev.expedienteOverrides[pacienteId], ...patch },
+        },
+      }));
+    },
     [],
   );
 
@@ -258,6 +281,7 @@ export function ExpedienteStoreProvider({ children }: { children: ReactNode }) {
       addConsulta,
       updateConsulta,
       getExpediente,
+      updateExpediente,
       listArchivos,
       addArchivo,
       removeArchivo,
@@ -275,6 +299,7 @@ export function ExpedienteStoreProvider({ children }: { children: ReactNode }) {
       addConsulta,
       updateConsulta,
       getExpediente,
+      updateExpediente,
       listArchivos,
       addArchivo,
       removeArchivo,
@@ -323,6 +348,16 @@ export function useConsulta(consultaId: string | null | undefined) {
 export function useExpediente(pacienteId: string) {
   const store = useExpedienteStore();
   return store.getExpediente(pacienteId);
+}
+
+/** Expediente + persistencia por sección (localStorage). */
+export function useExpedienteEditable(pacienteId: string) {
+  const store = useExpedienteStore();
+  return {
+    expediente: store.getExpediente(pacienteId),
+    update: (patch: Partial<ExpedienteMock>) =>
+      store.updateExpediente(pacienteId, patch),
+  };
 }
 
 export function useArchivos(consultaId: string) {

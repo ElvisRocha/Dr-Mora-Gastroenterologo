@@ -528,18 +528,43 @@ export type AntropometriaMock = {
   percentilPeso?: string;
 };
 
+/** Chip de tres estados: Sí = true, No = false, sin responder = null. */
+export type TriState = boolean | null;
+
 export type AntecedentesMock = {
-  familiares: string;
-  alergias: string;
+  // Antecedentes patológicos personales (chip Sí/No + detalle)
+  padeceEnfermedad: TriState;
+  cualEnfermedad: string;
+  tomaMedicamentos: TriState;
+  cualMedicamento: string;
+  haSidoOperado: TriState;
   cirugias: string;
+  haSidoHospitalizado: TriState;
   hospitalizaciones: string;
-  perinatales: {
-    tipoParto: "vaginal" | "cesarea" | "no_especificado";
-    pesoNacerKg: number;
-    tallaNacerCm: number;
-    semanasGestacion: number;
-    lactancia: string;
-  };
+  tieneAlergias: TriState;
+  alergias: string;
+  // Antecedentes familiares
+  familiares: string;
+};
+
+export type PerinatalMock = {
+  // Embarazo y parto
+  tipoParto: "vaginal" | "cesarea" | "no_especificado";
+  semanasGestacion: number;
+  pesoNacerKg: number;
+  tallaNacerCm: number;
+  complicacionesParto: TriState;
+  complicacionesDetalle: string;
+  // Lactancia y alimentación temprana
+  lactanciaMaterna: TriState;
+  lactancia: string;
+  ablactacionMeses: number;
+  // Desarrollo psicomotor
+  desarrolloAcorde: TriState;
+  hitos: string;
+  // Esquema de vacunación
+  esquemaCompleto: TriState;
+  vacunasNotas: string;
 };
 
 export type HabitoDigestivoMock = {
@@ -549,6 +574,13 @@ export type HabitoDigestivoMock = {
   sangrado: boolean;
   distension: string;
   reflujo: string;
+  // Síntomas digestivos actuales (chip Sí/No)
+  dolorAbdominal: TriState;
+  estrenimiento: TriState;
+  diarrea: TriState;
+  nauseaVomito: TriState;
+  pirosis: TriState;
+  sintomasNotas: string;
 };
 
 export type AlimentacionMock = {
@@ -556,6 +588,7 @@ export type AlimentacionMock = {
   dietaEspecial: string;
   alimentosPreferidos: string[];
   alimentosRechazados: string[];
+  apetito: "" | "bueno" | "regular" | "malo";
 };
 
 export type VacunaMock = {
@@ -566,6 +599,7 @@ export type VacunaMock = {
 
 export type ExpedienteMock = {
   antecedentes: AntecedentesMock;
+  perinatal: PerinatalMock;
   antropometria: AntropometriaMock[];
   habitoDigestivo: HabitoDigestivoMock;
   alimentacion: AlimentacionMock;
@@ -576,17 +610,32 @@ export type ExpedienteMock = {
 export const expedientesMock: Record<string, ExpedienteMock> = {
   "p-001": {
     antecedentes: {
-      familiares: "Madre con atopia. Tío materno con EII (Crohn).",
-      alergias: "Proteína de leche de vaca.",
+      padeceEnfermedad: true,
+      cualEnfermedad: "Alergia a la proteína de leche de vaca (APLV), en seguimiento.",
+      tomaMedicamentos: false,
+      cualMedicamento: "",
+      haSidoOperado: false,
       cirugias: "Ninguna.",
+      haSidoHospitalizado: true,
       hospitalizaciones: "Una a los 8 meses por bronquiolitis (3 días).",
-      perinatales: {
-        tipoParto: "cesarea",
-        pesoNacerKg: 3.2,
-        tallaNacerCm: 49,
-        semanasGestacion: 38,
-        lactancia: "Materna exclusiva 4 meses, luego fórmula extensamente hidrolizada.",
-      },
+      tieneAlergias: true,
+      alergias: "Proteína de leche de vaca.",
+      familiares: "Madre con atopia. Tío materno con enfermedad inflamatoria intestinal (Crohn).",
+    },
+    perinatal: {
+      tipoParto: "cesarea",
+      semanasGestacion: 38,
+      pesoNacerKg: 3.2,
+      tallaNacerCm: 49,
+      complicacionesParto: false,
+      complicacionesDetalle: "",
+      lactanciaMaterna: true,
+      lactancia: "Materna exclusiva 4 meses, luego fórmula extensamente hidrolizada.",
+      ablactacionMeses: 6,
+      desarrolloAcorde: true,
+      hitos: "Sostén cefálico 3 m · sedestación 6 m · marcha 13 m · primeras palabras 12 m.",
+      esquemaCompleto: true,
+      vacunasNotas: "Al día según el esquema nacional; influenza estacional aplicada.",
     },
     antropometria: [
       { fecha: "2026-04-22", pesoKg: 12.4, tallaCm: 92, imc: 14.6, percentilPeso: "p25" },
@@ -601,12 +650,19 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       sangrado: false,
       distension: "Ocasional, postprandial",
       reflujo: "Reflujo silencioso ocasional",
+      dolorAbdominal: false,
+      estrenimiento: false,
+      diarrea: false,
+      nauseaVomito: false,
+      pirosis: true,
+      sintomasNotas: "Regurgitaciones ocasionales tras tomas grandes; sin pérdida de peso.",
     },
     alimentacion: {
       comidasPorDia: 5,
       dietaEspecial: "Sin proteína de leche de vaca",
       alimentosPreferidos: ["Pollo", "Arroz", "Manzana"],
       alimentosRechazados: ["Vegetales de hoja verde"],
+      apetito: "bueno",
     },
     vacunas: [
       { nombre: "BCG", fecha: "2022-04-13" },
@@ -633,17 +689,32 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
   },
   "p-002": {
     antecedentes: {
-      familiares: "Padre con celiaquía. Abuela materna con tiroiditis autoinmune.",
-      alergias: "Ninguna conocida.",
+      padeceEnfermedad: true,
+      cualEnfermedad: "Enfermedad celíaca confirmada por biopsia (2024).",
+      tomaMedicamentos: false,
+      cualMedicamento: "",
+      haSidoOperado: false,
       cirugias: "Ninguna.",
+      haSidoHospitalizado: false,
       hospitalizaciones: "Ninguna.",
-      perinatales: {
-        tipoParto: "vaginal",
-        pesoNacerKg: 3.5,
-        tallaNacerCm: 51,
-        semanasGestacion: 40,
-        lactancia: "Materna exclusiva 6 meses.",
-      },
+      tieneAlergias: false,
+      alergias: "Ninguna conocida.",
+      familiares: "Padre con celiaquía. Abuela materna con tiroiditis autoinmune.",
+    },
+    perinatal: {
+      tipoParto: "vaginal",
+      semanasGestacion: 40,
+      pesoNacerKg: 3.5,
+      tallaNacerCm: 51,
+      complicacionesParto: false,
+      complicacionesDetalle: "",
+      lactanciaMaterna: true,
+      lactancia: "Materna exclusiva 6 meses.",
+      ablactacionMeses: 6,
+      desarrolloAcorde: true,
+      hitos: "Desarrollo psicomotor dentro de lo esperado para la edad.",
+      esquemaCompleto: true,
+      vacunasNotas: "Esquema nacional completo; VPH en curso.",
     },
     antropometria: [
       { fecha: "2026-03-18", pesoKg: 33.5, tallaCm: 142, imc: 16.6, percentilPeso: "p40" },
@@ -657,12 +728,19 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       sangrado: false,
       distension: "Ausente con dieta libre de gluten",
       reflujo: "Sin episodios",
+      dolorAbdominal: false,
+      estrenimiento: false,
+      diarrea: false,
+      nauseaVomito: false,
+      pirosis: false,
+      sintomasNotas: "Asintomática con adherencia estricta a la dieta sin gluten.",
     },
     alimentacion: {
       comidasPorDia: 4,
       dietaEspecial: "Estricta libre de gluten",
       alimentosPreferidos: ["Pasta de arroz", "Frutas", "Yogurt"],
       alimentosRechazados: [],
+      apetito: "bueno",
     },
     vacunas: [
       { nombre: "Esquema nacional de vacunación completo", fecha: "2014-2024" },
@@ -680,18 +758,32 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
   },
   "p-003": {
     antecedentes: {
-      familiares: "Hermano mayor con colitis ulcerosa.",
-      alergias: "Ninguna conocida.",
+      padeceEnfermedad: true,
+      cualEnfermedad: "Enfermedad de Crohn ileocolónica (2024), en evaluación para terapia biológica.",
+      tomaMedicamentos: true,
+      cualMedicamento: "Azatioprina; suplemento de hierro y vitamina D.",
+      haSidoOperado: true,
       cirugias: "Apendicectomía 2024.",
-      hospitalizaciones:
-        "Dos por brote de Crohn (2024 y 2025), control con biológico en evaluación.",
-      perinatales: {
-        tipoParto: "vaginal",
-        pesoNacerKg: 3.4,
-        tallaNacerCm: 50,
-        semanasGestacion: 39,
-        lactancia: "Materna 4 meses + fórmula.",
-      },
+      haSidoHospitalizado: true,
+      hospitalizaciones: "Dos internamientos por brote de Crohn (2024 y 2025).",
+      tieneAlergias: false,
+      alergias: "Ninguna conocida.",
+      familiares: "Hermano mayor con colitis ulcerosa.",
+    },
+    perinatal: {
+      tipoParto: "vaginal",
+      semanasGestacion: 39,
+      pesoNacerKg: 3.4,
+      tallaNacerCm: 50,
+      complicacionesParto: false,
+      complicacionesDetalle: "",
+      lactanciaMaterna: true,
+      lactancia: "Materna 4 meses + fórmula.",
+      ablactacionMeses: 5,
+      desarrolloAcorde: true,
+      hitos: "Desarrollo normal; leve enlentecimiento de talla (p35) durante los brotes.",
+      esquemaCompleto: true,
+      vacunasNotas: "Esquema completo; refuerzo de hepatitis A en 2024.",
     },
     antropometria: [
       { fecha: "2026-04-29", pesoKg: 52.8, tallaCm: 168, imc: 18.7, percentilPeso: "p35" },
@@ -705,12 +797,20 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       sangrado: true,
       distension: "Frecuente, asociada a brotes",
       reflujo: "Ausente",
+      dolorAbdominal: true,
+      estrenimiento: false,
+      diarrea: true,
+      nauseaVomito: false,
+      pirosis: false,
+      sintomasNotas:
+        "Dolor abdominal cólico y diarrea con moco durante los brotes; astenia asociada.",
     },
     alimentacion: {
       comidasPorDia: 4,
       dietaEspecial: "Baja en lactosa y residuos durante brotes",
       alimentosPreferidos: ["Arroz", "Pollo a la plancha", "Plátano"],
       alimentosRechazados: ["Lácteos enteros", "Granos integrales"],
+      apetito: "regular",
     },
     vacunas: [
       { nombre: "Esquema nacional de vacunación completo", fecha: "2008-2018" },
@@ -737,17 +837,32 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
 
 export const expedienteDefault: ExpedienteMock = {
   antecedentes: {
-    familiares: "",
-    alergias: "",
+    padeceEnfermedad: null,
+    cualEnfermedad: "",
+    tomaMedicamentos: null,
+    cualMedicamento: "",
+    haSidoOperado: null,
     cirugias: "",
+    haSidoHospitalizado: null,
     hospitalizaciones: "",
-    perinatales: {
-      tipoParto: "no_especificado",
-      pesoNacerKg: 0,
-      tallaNacerCm: 0,
-      semanasGestacion: 0,
-      lactancia: "",
-    },
+    tieneAlergias: null,
+    alergias: "",
+    familiares: "",
+  },
+  perinatal: {
+    tipoParto: "no_especificado",
+    semanasGestacion: 0,
+    pesoNacerKg: 0,
+    tallaNacerCm: 0,
+    complicacionesParto: null,
+    complicacionesDetalle: "",
+    lactanciaMaterna: null,
+    lactancia: "",
+    ablactacionMeses: 0,
+    desarrolloAcorde: null,
+    hitos: "",
+    esquemaCompleto: null,
+    vacunasNotas: "",
   },
   antropometria: [],
   habitoDigestivo: {
@@ -757,12 +872,19 @@ export const expedienteDefault: ExpedienteMock = {
     sangrado: false,
     distension: "",
     reflujo: "",
+    dolorAbdominal: null,
+    estrenimiento: null,
+    diarrea: null,
+    nauseaVomito: null,
+    pirosis: null,
+    sintomasNotas: "",
   },
   alimentacion: {
     comidasPorDia: 0,
     dietaEspecial: "",
     alimentosPreferidos: [],
     alimentosRechazados: [],
+    apetito: "",
   },
   vacunas: [],
   tutores: [],

@@ -927,15 +927,55 @@ export const expedienteDefault: ExpedienteMock = {
 export type SignosVitalesMock = {
   pa?: string;
   fc?: string;
+  fr?: string;
+  satO2?: string;
+  temperatura?: number;
   pesoKg?: number;
   tallaCm?: number;
-  temperatura?: number;
+  perimetroCefalicoCm?: number;
   imc?: number;
+  percentilPeso?: string;
+  percentilTalla?: string;
+  percentilImc?: string;
 };
 
 export type ExploracionFisicaMock = {
-  abdomen?: string;
   general?: string;
+  orofaringe?: string;
+  cardiopulmonar?: string;
+  abdomen?: string;
+  piel?: string;
+  neurologico?: string;
+};
+
+/** Tipos de consulta pediátrica que ofrecen las tarjetas del modal. */
+export type TipoConsulta = "general" | "nino_sano" | "seguimiento" | "endoscopia";
+
+/** Hábito registrado por consulta: chip Sí/No + notas descriptivas. */
+export type HabitoEntry = { tiene: TriState; notas: string };
+
+export type HabitosConsultaMock = {
+  alimentacion: HabitoEntry;
+  sueno: HabitoEntry;
+  actividadFisica: HabitoEntry;
+  pantallas: HabitoEntry;
+  habitoIntestinal: HabitoEntry;
+  hidratacion: HabitoEntry;
+  tabacoVapeo: HabitoEntry;
+  alcohol: HabitoEntry;
+  cafeina: HabitoEntry;
+};
+
+/** Hallazgos de endoscopía / procedimiento digestivo. */
+export type EndoscopiaMock = {
+  indicacion: string;
+  esofago: string;
+  estomago: string;
+  duodeno: string;
+  colonIleon: string;
+  biopsias: string;
+  impresion: string;
+  sedacionTolerancia: string;
 };
 
 export type ConsultaMock = {
@@ -943,6 +983,7 @@ export type ConsultaMock = {
   pacienteId: string;
   fecha: string;
   servicioSlug: string;
+  tipoConsulta?: TipoConsulta;
   motivo: string;
   notas: string;
   diagnosticos: string[];
@@ -954,9 +995,40 @@ export type ConsultaMock = {
   resultadosLaboratorio?: string;
   signosVitales?: SignosVitalesMock;
   exploracionFisica?: ExploracionFisicaMock;
+  habitos?: HabitosConsultaMock;
+  // Campos específicos por tipo de consulta
+  desarrolloNotas?: string; // Control de niño sano
+  alimentacionNotas?: string; // Control de niño sano
+  tamizajesNotas?: string; // Control de niño sano
+  evolucionNotas?: string; // Seguimiento
+  adherenciaNotas?: string; // Seguimiento
+  endoscopia?: EndoscopiaMock; // Endoscopía / procedimiento
   planTratamiento?: string;
   notasAdicionales?: string;
 };
+
+export const emptyHabitosConsulta = (): HabitosConsultaMock => ({
+  alimentacion: { tiene: null, notas: "" },
+  sueno: { tiene: null, notas: "" },
+  actividadFisica: { tiene: null, notas: "" },
+  pantallas: { tiene: null, notas: "" },
+  habitoIntestinal: { tiene: null, notas: "" },
+  hidratacion: { tiene: null, notas: "" },
+  tabacoVapeo: { tiene: null, notas: "" },
+  alcohol: { tiene: null, notas: "" },
+  cafeina: { tiene: null, notas: "" },
+});
+
+export const emptyEndoscopia = (): EndoscopiaMock => ({
+  indicacion: "",
+  esofago: "",
+  estomago: "",
+  duodeno: "",
+  colonIleon: "",
+  biopsias: "",
+  impresion: "",
+  sedacionTolerancia: "",
+});
 
 export type ArchivoMock = {
   id: string;
@@ -984,14 +1056,49 @@ export const consultasMock: ConsultaMock[] = [
     pacienteId: "p-001",
     fecha: at(-7, 10),
     servicioSlug: "consulta-gastro",
+    tipoConsulta: "general",
     motivo: "Vómito post-toma persistente, irritabilidad nocturna.",
+    acompanante: "Madre (Marisol Aguirre)",
+    enfermedadActual:
+      "Vómitos posprandiales desde hace 3 semanas, 4–5 al día, no biliosos ni proyectiles. Arqueo e irritabilidad nocturna. Sin fiebre ni diarrea; buena diuresis y ganancia ponderal.",
     notas:
       "Lactante con cuadro compatible con ERGE + APLV. Continúa con fórmula extensamente hidrolizada y omeprazol. Adecuada ganancia ponderal en últimas 6 semanas. Se programa pH-metría 24h para confirmar reflujo ácido nocturno.",
+    signosVitales: {
+      fc: "128 lpm",
+      fr: "32 rpm",
+      satO2: "98 %",
+      temperatura: 36.7,
+      pesoKg: 12.4,
+      tallaCm: 92,
+      perimetroCefalicoCm: 48,
+      imc: 14.6,
+      percentilPeso: "p25",
+    },
+    exploracionFisica: {
+      general: "Activo, reactivo, bien hidratado y perfundido.",
+      abdomen: "Blando, depresible, sin masas ni visceromegalias; ruidos presentes.",
+    },
+    habitos: {
+      alimentacion: {
+        tiene: true,
+        notas: "Fórmula extensamente hidrolizada, 5 tomas/día; sin lácteos.",
+      },
+      sueno: { tiene: false, notas: "Despertares nocturnos por reflujo." },
+      actividadFisica: { tiene: null, notas: "" },
+      pantallas: { tiene: null, notas: "" },
+      habitoIntestinal: { tiene: true, notas: "1 deposición/día, blanda, sin sangre." },
+      hidratacion: { tiene: true, notas: "Adecuada según tomas." },
+      tabacoVapeo: { tiene: null, notas: "" },
+      alcohol: { tiene: null, notas: "" },
+      cafeina: { tiene: null, notas: "" },
+    },
     diagnosticos: ["ERGE del lactante", "APLV"],
     procedimientosOrdenados: ["pH-metría 24h"],
     medicamentosRecetados: [
       { nombre: "Omeprazol", dosis: "5 mg", frecuencia: "1 vez/día" },
     ],
+    planTratamiento:
+      "Mantener fórmula hidrolizada y omeprazol. Medidas antirreflujo. pH-metría 24h. Control en 6 semanas.",
     duracionMin: 60,
   },
   {
@@ -999,14 +1106,41 @@ export const consultasMock: ConsultaMock[] = [
     pacienteId: "p-002",
     fecha: at(-30, 11, 30),
     servicioSlug: "seguimiento-cronico",
+    tipoConsulta: "seguimiento",
     motivo: "Control rutinario celiaquía, sin sintomatología.",
+    acompanante: "Padre (Iván Reyes)",
+    evolucionNotas:
+      "Asintomática desde el último control. Sin dolor abdominal ni distensión. Crecimiento en p35–40 estable.",
+    adherenciaNotas:
+      "Adherencia estricta a dieta libre de gluten; buen manejo en el colegio. Anti-tTG en descenso.",
     notas:
       "Adherencia estricta a dieta libre de gluten. Crecimiento adecuado. Anticuerpos anti-tTG en descenso. Mantener controles cada 6 meses.",
+    signosVitales: {
+      pa: "104/66",
+      fc: "84 lpm",
+      temperatura: 36.5,
+      pesoKg: 33.5,
+      tallaCm: 142,
+      imc: 16.6,
+      percentilPeso: "p40",
+    },
+    habitos: {
+      alimentacion: { tiene: true, notas: "Dieta libre de gluten, variada." },
+      sueno: { tiene: true, notas: "8–9 h/noche, horario regular." },
+      actividadFisica: { tiene: true, notas: "Natación 2 veces/semana." },
+      pantallas: { tiene: true, notas: "~2 h/día." },
+      habitoIntestinal: { tiene: true, notas: "Diaria, Bristol 4." },
+      hidratacion: { tiene: true, notas: "Adecuada." },
+      tabacoVapeo: { tiene: false, notas: "" },
+      alcohol: { tiene: false, notas: "" },
+      cafeina: { tiene: false, notas: "" },
+    },
     diagnosticos: ["Celiaquía"],
     procedimientosOrdenados: [],
     medicamentosRecetados: [
       { nombre: "Multivitamínico pediátrico", dosis: "1 tableta", frecuencia: "1 vez/día" },
     ],
+    planTratamiento: "Continuar dieta sin gluten. Control con anti-tTG en 6 meses.",
     duracionMin: 30,
   },
   {
@@ -1014,14 +1148,77 @@ export const consultasMock: ConsultaMock[] = [
     pacienteId: "p-003",
     fecha: at(-3, 16),
     servicioSlug: "consulta-gastro",
+    tipoConsulta: "general",
     motivo: "Aumento de evacuaciones con sangre, dolor abdominal.",
+    acompanante: "Madre (Patricia Krauss)",
+    enfermedadActual:
+      "Hace 10 días, aumento a 5–6 evacuaciones/día con moco y sangre, dolor cólico periumbilical y astenia. Sin fiebre. Pérdida de 1 kg.",
     notas:
       "Posible brote moderado de enfermedad de Crohn. Calprotectina fecal solicitada. Considerar ajuste de mesalazina y discutir biológico en próxima consulta. Indicada dieta baja en residuos temporal.",
+    signosVitales: {
+      pa: "108/68",
+      fc: "92 lpm",
+      temperatura: 37.1,
+      pesoKg: 52.8,
+      tallaCm: 168,
+      imc: 18.7,
+      percentilPeso: "p35",
+    },
+    exploracionFisica: {
+      general: "Palidez leve de mucosas; hidratado.",
+      abdomen: "Dolor a la palpación en fosa iliaca derecha; sin rebote ni masas.",
+    },
+    habitos: {
+      alimentacion: { tiene: true, notas: "Dieta baja en lactosa y residuos durante brotes." },
+      sueno: { tiene: true, notas: "Interrumpido por dolor durante brotes." },
+      actividadFisica: { tiene: false, notas: "Reducida por astenia." },
+      pantallas: { tiene: true, notas: "~3 h/día." },
+      habitoIntestinal: { tiene: false, notas: "5–6 deposiciones/día con moco y sangre." },
+      hidratacion: { tiene: true, notas: "Adecuada." },
+      tabacoVapeo: { tiene: false, notas: "" },
+      alcohol: { tiene: false, notas: "" },
+      cafeina: { tiene: true, notas: "1 bebida energética ocasional; se recomienda evitar." },
+    },
     diagnosticos: ["Enfermedad de Crohn"],
     procedimientosOrdenados: ["Colonoscopía de control", "Calprotectina fecal"],
     medicamentosRecetados: [
       { nombre: "Mesalazina", dosis: "800 mg", frecuencia: "3 veces/día" },
     ],
+    planTratamiento:
+      "Dieta baja en residuos. Ajustar mesalazina. Colonoscopía y calprotectina. Valorar biológico en control.",
+    duracionMin: 60,
+  },
+  {
+    id: "co-004",
+    pacienteId: "p-003",
+    fecha: at(-1, 9),
+    servicioSlug: "colonoscopia",
+    tipoConsulta: "endoscopia",
+    motivo: "Colonoscopía de control por brote de enfermedad de Crohn.",
+    acompanante: "Madre (Patricia Krauss)",
+    notas:
+      "Colonoscopía completa hasta íleon terminal bajo sedación. Hallazgos compatibles con actividad inflamatoria ileocolónica. Biopsias escalonadas enviadas a patología.",
+    endoscopia: {
+      indicacion: "Reevaluación de actividad inflamatoria en enfermedad de Crohn conocida.",
+      esofago: "No evaluado en este procedimiento.",
+      estomago: "No evaluado en este procedimiento.",
+      duodeno: "No evaluado en este procedimiento.",
+      colonIleon:
+        "Íleon terminal con aftas y eritema parcheado. Colon con úlceras superficiales segmentarias y patrón en empedrado en colon derecho; recto respetado.",
+      biopsias: "Escalonadas de íleon, colon derecho, transverso, izquierdo y recto (10 frascos).",
+      impresion: "Actividad inflamatoria ileocolónica moderada, compatible con Crohn.",
+      sedacionTolerancia: "Sedación consciente; buena tolerancia, sin complicaciones inmediatas.",
+    },
+    signosVitales: {
+      fc: "88 lpm",
+      satO2: "99 %",
+      temperatura: 36.6,
+    },
+    diagnosticos: ["Enfermedad de Crohn ileocolónica activa"],
+    procedimientosOrdenados: ["Biopsias escalonadas"],
+    medicamentosRecetados: [],
+    planTratamiento:
+      "Esperar histología. Escalar terapia según resultado (valorar biológico). Control en 2 semanas.",
     duracionMin: 60,
   },
 ];

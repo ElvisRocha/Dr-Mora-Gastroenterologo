@@ -17,6 +17,7 @@ import { useAuth, type Rol } from "@/hooks/useAuth";
 import { ExpedienteStoreProvider } from "@/store/expedienteStore";
 import { useClinic } from "@/store/clinicStore";
 import { NotificacionesBell } from "@/components/admin/NotificacionesBell";
+import { LoginQuoteModal } from "@/components/admin/LoginQuoteModal";
 import { cn } from "@/lib/cn";
 import logoUrl from "@/assets/logo.png";
 import faviconUrl from "@/assets/favicon.png";
@@ -130,6 +131,7 @@ export function AdminLayout() {
 
   return (
     <ExpedienteStoreProvider>
+    <LoginQuoteModal />
     <div
       className={cn(
         "grid min-h-[100dvh] bg-muted/40 transition-[grid-template-columns] duration-200 ease-gentle",

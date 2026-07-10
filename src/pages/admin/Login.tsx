@@ -3,12 +3,23 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { useClinic } from "@/store/clinicStore";
 import { Button } from "@/components/ui/Button";
 import { Field, Input } from "@/components/ui/Input";
+import { stashLoginQuote } from "@/components/admin/LoginQuoteModal";
+import { fraseDelDia } from "@/lib/data/frases";
 import logoUrl from "@/assets/logo.png";
+
+function saludo(nombre: string): string {
+  const h = new Date().getHours();
+  const momento = h < 12 ? "buenos días" : h < 19 ? "buenas tardes" : "buenas noches";
+  const primer = nombre.split(" ")[0];
+  return `¡Hola ${primer}, ${momento}!`;
+}
 
 export default function Login() {
   const { user, signIn } = useAuth();
+  const { config } = useClinic();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: Location })?.from?.pathname ?? "/admin/dashboard";
@@ -26,8 +37,12 @@ export default function Login() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await signIn(email, password);
-      toast.success("Sesión iniciada");
+      const u = await signIn(email, password);
+      if (config.mostrarFraseLogin) {
+        stashLoginQuote({ frase: fraseDelDia(), saludo: saludo(u.nombre) });
+      } else {
+        toast.success(saludo(u.nombre));
+      }
       navigate(from, { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error al iniciar sesión";

@@ -7,7 +7,7 @@ export type ServicioMock = {
 };
 
 export const serviciosMock: ServicioMock[] = [
-  { slug: "consulta-gastro", icon: "stethoscope", duracion: 60, destacado: true },
+  { slug: "consulta-gastro", icon: "stethoscope", duracion: 45, destacado: true },
   { slug: "endoscopia-alta", icon: "scope", duracion: 45 },
   { slug: "colonoscopia", icon: "intestine", duracion: 60 },
   { slug: "phmetria", icon: "wave", duracion: 30 },

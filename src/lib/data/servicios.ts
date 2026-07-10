@@ -49,8 +49,8 @@ export const serviciosSeed: ServicioFull[] = [
     nombre: "Consulta de gastroenterología pediátrica",
     nombreEn: "Pediatric gastroenterology consultation",
     categoria: "consultas",
-    duracion: "60 min",
-    duracionMin: 60,
+    duracion: "45 min",
+    duracionMin: 45,
     precio: 60000,
     descripcion:
       "Evaluación completa del sistema digestivo con historia clínica, exploración física, antropometría y plan diagnóstico y terapéutico personalizado para tu hijo.",

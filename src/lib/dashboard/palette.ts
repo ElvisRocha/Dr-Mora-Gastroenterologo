@@ -17,8 +17,8 @@ export const SERIE = {
   proyectado: C.gray,
   canalIA: C.navy, // Gastrito
   canalWeb: C.leaf,
-  dentro: C.teal, // en horario público (color de marca)
-  fuera: C.amber, // fuera de horario (color de marca)
+  dentro: C.navy, // en horario público (azul de marca)
+  fuera: C.leaf, // fuera de horario — demanda captada (verde de marca)
   realOver: C.coral, // duración real se pasa (malo)
   realUnder: C.leaf, // real por debajo (bueno) — más rápida con el sistema
   estimada: C.navy, // tiempo estimado (baseline, color de marca)

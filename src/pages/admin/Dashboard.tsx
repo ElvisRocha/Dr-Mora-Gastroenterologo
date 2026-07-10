@@ -616,8 +616,8 @@ function FueraHorario({ f }: { f: FiltroState }) {
   return (
     <Panel className="flex flex-col">
       <CardTitle title="Fuera de horario" sub="Citas capturadas con la clínica cerrada." />
-      <div className="mb-3 flex items-center gap-3 rounded-xl bg-navy/5 px-4 py-3">
-        <span className="font-display text-3xl font-bold text-navy">{d.pctFuera}%</span>
+      <div className="mb-3 flex items-center gap-3 rounded-xl bg-leaf/10 px-4 py-3">
+        <span className="font-display text-3xl font-bold text-leaf">{d.pctFuera}%</span>
         <p className="text-xs leading-snug text-muted-foreground">
           de las citas se agendaron <strong className="text-foreground">fuera del horario laboral</strong>. Demanda que una secretaría no habría atendido.
         </p>
@@ -632,7 +632,7 @@ function FueraHorario({ f }: { f: FiltroState }) {
               <LabelList dataKey="Dentro" position="center" formatter={(v: number) => (v > 0 ? v : "")} style={{ fontSize: 10, fill: "#fff" }} />
             </Bar>
             <Bar dataKey="Fuera" stackId="h" fill={SERIE.fuera} radius={[0, 3, 3, 0]}>
-              <LabelList dataKey="Fuera" position="center" formatter={(v: number) => (v > 0 ? v : "")} style={{ fontSize: 10, fill: "#fff" }} />
+              <LabelList dataKey="Fuera" position="center" formatter={(v: number) => (v > 0 ? v : "")} style={{ fontSize: 10, fill: "#14310a", fontWeight: 600 }} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

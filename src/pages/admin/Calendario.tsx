@@ -214,7 +214,9 @@ export default function Calendario() {
           </div>
         </div>
         <p className={cn("truncate leading-tight", dense ? "text-[11px]" : "text-sm")}>
-          {paciente ? `${paciente.nombre} ${paciente.apellidoPaterno}` : "Sin paciente"}
+          {paciente
+            ? `${paciente.nombre} ${paciente.apellidoPaterno}`
+            : (cita.pacienteNombre ?? "Sin paciente")}
         </p>
         <p
           className={cn(

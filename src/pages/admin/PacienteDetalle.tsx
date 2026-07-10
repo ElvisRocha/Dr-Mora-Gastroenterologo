@@ -27,6 +27,7 @@ import { ExpedienteConsultas } from "@/components/admin/expediente/ExpedienteCon
 import { ExpedienteCitas } from "@/components/admin/expediente/ExpedienteCitas";
 import { EditarPacienteModal } from "@/components/admin/EditarPacienteModal";
 import { ConsultaFormModal } from "@/components/admin/ConsultaFormModal";
+import { ConsultationTimer } from "@/components/admin/expediente/ConsultationTimer";
 
 type TabKey =
   | "resumen"
@@ -140,15 +141,18 @@ export default function PacienteDetalle() {
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-wrap gap-2">
-          <Button variant="outline" onClick={() => setShowEdit(true)}>
-            <Pencil size={14} strokeWidth={1.75} />
-            Editar
-          </Button>
-          <Button onClick={() => setShowNewConsulta(true)}>
-            <Plus size={14} strokeWidth={1.75} />
-            Nueva consulta
-          </Button>
+        <div className="flex shrink-0 flex-col items-start gap-2 md:items-end">
+          <ConsultationTimer onTerminar={() => setShowNewConsulta(true)} />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setShowEdit(true)}>
+              <Pencil size={14} strokeWidth={1.75} />
+              Editar
+            </Button>
+            <Button onClick={() => setShowNewConsulta(true)}>
+              <Plus size={14} strokeWidth={1.75} />
+              Nueva consulta
+            </Button>
+          </div>
         </div>
       </div>
 

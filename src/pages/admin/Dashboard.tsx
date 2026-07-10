@@ -629,7 +629,7 @@ function FueraHorario({ f }: { f: FiltroState }) {
             <YAxis type="category" dataKey="canal" width={80} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: C.muted }} />
             <Tooltip cursor={{ fill: "rgba(0,0,0,0.03)" }} />
             <Bar dataKey="Dentro" stackId="h" fill={SERIE.dentro} radius={[3, 0, 0, 3]}>
-              <LabelList dataKey="Dentro" position="center" formatter={(v: number) => (v > 0 ? v : "")} style={{ fontSize: 10, fill: "#334155" }} />
+              <LabelList dataKey="Dentro" position="center" formatter={(v: number) => (v > 0 ? v : "")} style={{ fontSize: 10, fill: "#fff" }} />
             </Bar>
             <Bar dataKey="Fuera" stackId="h" fill={SERIE.fuera} radius={[0, 3, 3, 0]}>
               <LabelList dataKey="Fuera" position="center" formatter={(v: number) => (v > 0 ? v : "")} style={{ fontSize: 10, fill: "#fff" }} />
@@ -637,7 +637,11 @@ function FueraHorario({ f }: { f: FiltroState }) {
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-1 text-[11px] text-muted-foreground">Dentro vs. fuera del horario público, por canal automático.</p>
+      <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIE.dentro }} /> Dentro del horario</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIE.fuera }} /> Fuera del horario</span>
+        <span>· por canal automático.</span>
+      </p>
     </Panel>
   );
 }
@@ -690,11 +694,14 @@ function HoraDist({ f }: { f: FiltroState }) {
             <Tooltip cursor={{ fill: "rgba(0,0,0,0.03)" }} labelFormatter={(h) => hourAmPm(h as number, true)} />
             <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
             <Bar dataKey="Dentro" name="En horario" stackId="h" fill={SERIE.dentro} maxBarSize={20} />
-            <Bar dataKey="Fuera" name="Fuera de horario" stackId="h" fill={C.amber} radius={[3, 3, 0, 0]} maxBarSize={20} />
+            <Bar dataKey="Fuera" name="Fuera de horario" stackId="h" fill={SERIE.fuera} radius={[3, 3, 0, 0]} maxBarSize={20} />
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <p className="mt-1 text-[11px] text-muted-foreground">Gris = en horario público; ámbar = fuera de horario (noche o fin de semana).</p>
+      <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIE.dentro }} /> En horario público</span>
+        <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIE.fuera }} /> Fuera de horario (noche o fin de semana)</span>
+      </p>
     </Panel>
   );
 }
@@ -709,7 +716,7 @@ function DuracionChart({ f }: { f: FiltroState }) {
     <Panel>
       <CardTitle
         title="Duración real vs. estimada"
-        sub="Ordenado por mayor desviación. Coral = se pasa del estimado; verde = queda por debajo."
+        sub="Tiempo estimado vs. tiempo real de consulta. Con el sistema, cada consulta se agiliza (10–15% menos)."
         right={<span className="text-xs text-muted-foreground">minutos · solo completadas</span>}
       />
       {data.length === 0 ? (
@@ -724,22 +731,21 @@ function DuracionChart({ f }: { f: FiltroState }) {
                 <XAxis type="number" tickFormatter={(v) => `${v}m`} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: C.muted }} />
                 <YAxis type="category" dataKey="nombre" width={150} tick={<SvcTick />} interval={0} tickLine={false} axisLine={false} />
                 <Tooltip cursor={{ fill: "rgba(0,0,0,0.03)" }} formatter={(v: number) => `${v} min`} />
-                <Bar dataKey="estimada" name="Estimada" fill={SERIE.estimada} fillOpacity={0.35} radius={[0, 2, 2, 0]} barSize={12}>
+                <Bar dataKey="estimada" name="Estimada" fill={SERIE.estimada} fillOpacity={0.3} radius={[0, 2, 2, 0]} barSize={12}>
                   <LabelList dataKey="estimada" position="right" formatter={(v: number) => `${v}m`} style={{ fontSize: 10, fill: C.muted }} />
                 </Bar>
-                <Bar dataKey="real" name="Real promedio" radius={[0, 4, 4, 0]} barSize={12}>
+                <Bar dataKey="real" name="Real con el sistema" radius={[0, 4, 4, 0]} barSize={12}>
                   {data.map((d) => (
                     <Cell key={d.nombre} fill={d.real > d.estimada ? SERIE.realOver : SERIE.realUnder} />
                   ))}
-                  <LabelList dataKey="real" position="right" formatter={(v: number) => `${v}m`} style={{ fontSize: 10, fill: "#334155", fontWeight: 600 }} />
+                  <LabelList dataKey="real" position="right" formatter={(v: number) => `${v}m`} style={{ fontSize: 10, fill: SERIE.realUnder, fontWeight: 700 }} />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
           <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIE.estimada, opacity: 0.5 }} /> Estimada</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIE.realOver }} /> Real: se pasa del estimado</span>
-            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIE.realUnder }} /> Real: queda por debajo</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIE.estimada, opacity: 0.4 }} /> Tiempo estimado</span>
+            <span className="inline-flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full" style={{ background: SERIE.realUnder }} /> Tiempo real con el sistema (más rápido)</span>
           </div>
         </>
       )}

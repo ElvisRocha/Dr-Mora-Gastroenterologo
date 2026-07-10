@@ -164,13 +164,12 @@ function generarCitas(): AnalyticsCita[] {
       if (chance(0.08)) monto = Math.round(svc.precio * (0.85 + rnd() * 0.1));
 
       // Duración real vs estimada (solo completadas).
+      // Con el uso del sistema la consulta se agiliza: el tiempo real queda
+      // entre 10% y 15% por debajo del estimado.
       let duracionRealMin: number | undefined;
       if (estado === "completada") {
-        const factor = 0.8 + rnd() * 0.6; // 80%–140%
-        duracionRealMin = Math.max(
-          10,
-          Math.round((svc.duracionMin * factor) / 5) * 5,
-        );
+        const factor = 0.85 + rnd() * 0.05; // 85%–90% → 10%–15% menos
+        duracionRealMin = Math.max(8, Math.round(svc.duracionMin * factor));
       }
 
       citas.push({

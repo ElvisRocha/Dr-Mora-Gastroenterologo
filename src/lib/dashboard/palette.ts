@@ -17,11 +17,11 @@ export const SERIE = {
   proyectado: C.gray,
   canalIA: C.navy, // Gastrito
   canalWeb: C.leaf,
-  dentro: C.gray,
-  fuera: C.amber,
+  dentro: C.teal, // en horario público (color de marca)
+  fuera: C.amber, // fuera de horario (color de marca)
   realOver: C.coral, // duración real se pasa (malo)
-  realUnder: C.leaf, // real por debajo (bueno)
-  estimada: C.muted,
+  realUnder: C.leaf, // real por debajo (bueno) — más rápida con el sistema
+  estimada: C.navy, // tiempo estimado (baseline, color de marca)
   lead: C.teal,
 };
 

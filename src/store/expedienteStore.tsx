@@ -26,6 +26,7 @@ export const MAX_FILES_PER_CONSULTA = 5;
 
 type Snapshot = {
   pacienteOverrides: Record<string, Partial<PacienteMock>>;
+  pacientesExtra: PacienteMock[];
   consultasExtra: ConsultaMock[];
   consultaOverrides: Record<string, Partial<ConsultaMock>>;
   archivos: ArchivoMock[];
@@ -34,6 +35,7 @@ type Snapshot = {
 
 const emptySnapshot: Snapshot = {
   pacienteOverrides: {},
+  pacientesExtra: [],
   consultasExtra: [],
   consultaOverrides: {},
   archivos: [],
@@ -42,6 +44,8 @@ const emptySnapshot: Snapshot = {
 
 type StoreContextValue = {
   getPaciente: (id: string) => PacienteMock | undefined;
+  listPacientes: () => PacienteMock[];
+  addPaciente: (paciente: PacienteMock) => void;
   updatePaciente: (id: string, patch: Partial<PacienteMock>) => void;
   listConsultas: (pacienteId: string) => ConsultaMock[];
   getConsulta: (consultaId: string) => ConsultaMock | undefined;
@@ -68,6 +72,7 @@ function readSnapshot(): Snapshot {
     const parsed = JSON.parse(raw) as Partial<Snapshot>;
     return {
       pacienteOverrides: parsed.pacienteOverrides ?? {},
+      pacientesExtra: parsed.pacientesExtra ?? [],
       consultasExtra: parsed.consultasExtra ?? [],
       consultaOverrides: parsed.consultaOverrides ?? {},
       archivos: parsed.archivos ?? [],
@@ -104,13 +109,31 @@ export function ExpedienteStoreProvider({ children }: { children: ReactNode }) {
 
   const getPaciente = useCallback(
     (id: string): PacienteMock | undefined => {
-      const base = pacientesMock.find((p) => p.id === id);
+      const base =
+        pacientesMock.find((p) => p.id === id) ??
+        snap.pacientesExtra.find((p) => p.id === id);
       if (!base) return undefined;
       const override = snap.pacienteOverrides[id];
       return override ? { ...base, ...override } : base;
     },
-    [snap.pacienteOverrides],
+    [snap.pacienteOverrides, snap.pacientesExtra],
   );
+
+  const listPacientes = useCallback((): PacienteMock[] => {
+    const applyOv = (p: PacienteMock) => {
+      const ov = snap.pacienteOverrides[p.id];
+      return ov ? { ...p, ...ov } : p;
+    };
+    // Los agregados desde el formulario van primero (más recientes).
+    return [...snap.pacientesExtra.map(applyOv), ...pacientesMock.map(applyOv)];
+  }, [snap.pacienteOverrides, snap.pacientesExtra]);
+
+  const addPaciente = useCallback((paciente: PacienteMock) => {
+    setSnap((prev) => ({
+      ...prev,
+      pacientesExtra: [paciente, ...prev.pacientesExtra],
+    }));
+  }, []);
 
   const updatePaciente = useCallback(
     (id: string, patch: Partial<PacienteMock>) => {
@@ -227,6 +250,8 @@ export function ExpedienteStoreProvider({ children }: { children: ReactNode }) {
   const value = useMemo<StoreContextValue>(
     () => ({
       getPaciente,
+      listPacientes,
+      addPaciente,
       updatePaciente,
       listConsultas,
       getConsulta,
@@ -242,6 +267,8 @@ export function ExpedienteStoreProvider({ children }: { children: ReactNode }) {
     }),
     [
       getPaciente,
+      listPacientes,
+      addPaciente,
       updatePaciente,
       listConsultas,
       getConsulta,

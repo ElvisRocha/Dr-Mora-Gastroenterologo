@@ -1,3 +1,9 @@
+import {
+  generarPacientes,
+  identificacionParaSeed,
+  registroParaSeed,
+} from "@/lib/data/generarPacientes";
+
 export type ServicioMock = {
   slug: string;
   icon: "stethoscope" | "scope" | "intestine" | "wave" | "leaf" | "lung" | "carrot" | "calendar";
@@ -193,6 +199,21 @@ export type ProcedimientoAsignadoMock = {
   fecha?: string;
 };
 
+export type TipoIdentificacion =
+  | "cedula"
+  | "dimex"
+  | "pasaporte"
+  | "indocumentada";
+
+export type IdentificacionMock = { tipo: TipoIdentificacion; numero: string };
+
+export const TIPO_ID_LABEL: Record<TipoIdentificacion, string> = {
+  cedula: "Cédula",
+  dimex: "DIMEX",
+  pasaporte: "Pasaporte",
+  indocumentada: "Sin cédula",
+};
+
 export type PacienteMock = {
   id: string;
   nombre: string;
@@ -208,9 +229,15 @@ export type PacienteMock = {
   email?: string;
   medicamentosActivos?: MedicamentoMock[];
   procedimientosAsignados?: ProcedimientoAsignadoMock[];
+  /** Identificación del paciente (o del tutor si el menor no tiene). */
+  identificacion?: IdentificacionMock;
+  /** Fecha en que el expediente entró al sistema (ISO date). */
+  fechaRegistro?: string;
+  tutorParentesco?: string;
+  direccion?: string;
 };
 
-export const pacientesMock: PacienteMock[] = [
+const pacientesBase: PacienteMock[] = [
   {
     id: "p-001",
     nombre: "Tomás",
@@ -433,8 +460,30 @@ export const citasMock: CitaMock[] = [
   { id: "c-024", pacienteId: "p-010", servicioSlug: "consulta-gastro", fechaHora: at(25, 9), duracionMin: 60, estado: "agendada" },
 ];
 
+// Enriquecemos los 12 pacientes base con identificación y fecha de registro
+// deterministas, y añadimos ~200 pacientes generados para la demo a gran escala.
+const pacientesEnriquecidos: PacienteMock[] = pacientesBase.map((p, i) => ({
+  ...p,
+  identificacion: p.identificacion ?? identificacionParaSeed(i + 1),
+  fechaRegistro: p.fechaRegistro ?? registroParaSeed(i + 300),
+  tutorParentesco: p.tutorParentesco ?? "madre",
+}));
+
+export const pacientesMock: PacienteMock[] = [
+  ...pacientesEnriquecidos,
+  ...generarPacientes(200),
+];
+
 export function pacientePorId(id: string) {
   return pacientesMock.find((p) => p.id === id);
+}
+
+/** Edad legible para tablas: "8 meses", "3 años", "15 años". */
+export function formatearEdadTabla(fechaNacimiento: string): string {
+  const { anos, meses } = calcularEdad(fechaNacimiento);
+  if (anos < 1) return `${anos * 12 + meses} meses`;
+  if (anos < 2) return `1 año ${meses} m`;
+  return `${anos} años`;
 }
 
 export function calcularEdad(fechaNacimiento: string): { anos: number; meses: number } {

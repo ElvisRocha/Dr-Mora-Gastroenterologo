@@ -94,7 +94,7 @@ export default function Pacientes() {
               </div>
               <div className="mt-1 text-sm font-medium text-foreground">
                 {p.proximaCita
-                  ? new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short" }).format(new Date(p.proximaCita))
+                  ? new Intl.DateTimeFormat("es-CR", { day: "2-digit", month: "short" }).format(new Date(p.proximaCita))
                   : "—"}
               </div>
             </div>

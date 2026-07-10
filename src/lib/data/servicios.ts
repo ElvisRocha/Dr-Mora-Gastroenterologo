@@ -32,7 +32,7 @@ export type ServicioFull = {
   categoria: ServicioCategoria;
   duracion: string; // texto legible "60 min"
   duracionMin: number;
-  precio: number; // MXN
+  precio: number; // colones (CRC)
   precioNota?: string;
   descripcion: string; // orientado a familias (panel + sitio público)
   icon: string; // clave de icono (lib/mock ServicioMock.icon)
@@ -51,7 +51,7 @@ export const serviciosSeed: ServicioFull[] = [
     categoria: "consultas",
     duracion: "60 min",
     duracionMin: 60,
-    precio: 1400,
+    precio: 60000,
     descripcion:
       "Evaluación completa del sistema digestivo con historia clínica, exploración física, antropometría y plan diagnóstico y terapéutico personalizado para tu hijo.",
     icon: "stethoscope",
@@ -67,7 +67,7 @@ export const serviciosSeed: ServicioFull[] = [
     categoria: "consultas",
     duracion: "30 min",
     duracionMin: 30,
-    precio: 1000,
+    precio: 45000,
     descripcion:
       "Manejo continuo de enfermedad inflamatoria intestinal, celiaquía y alergia a la proteína de leche de vaca con controles programados.",
     icon: "calendar",
@@ -82,7 +82,7 @@ export const serviciosSeed: ServicioFull[] = [
     categoria: "endoscopia",
     duracion: "45 min",
     duracionMin: 45,
-    precio: 8500,
+    precio: 320000,
     precioNota: "No incluye honorarios de anestesiología",
     descripcion:
       "Procedimiento ambulatorio bajo sedación pediátrica para estudiar esófago, estómago y duodeno. Se realiza en hospital certificado con anestesiología pediátrica.",
@@ -98,7 +98,7 @@ export const serviciosSeed: ServicioFull[] = [
     categoria: "endoscopia",
     duracion: "60 min",
     duracionMin: 60,
-    precio: 12000,
+    precio: 380000,
     precioNota: "No incluye honorarios de anestesiología",
     descripcion:
       "Estudio endoscópico del colon con preparación adaptada al peso y edad. Requiere preparación intestinal previa e indicaciones de recepción.",
@@ -114,7 +114,7 @@ export const serviciosSeed: ServicioFull[] = [
     categoria: "pruebas",
     duracion: "30 min",
     duracionMin: 30,
-    precio: 6000,
+    precio: 190000,
     descripcion:
       "Medición ambulatoria del reflujo ácido durante 24 horas para confirmar o descartar ERGE. Se suspende el omeprazol 5 días antes del estudio.",
     icon: "wave",
@@ -129,7 +129,7 @@ export const serviciosSeed: ServicioFull[] = [
     categoria: "pruebas",
     duracion: "45 min",
     duracionMin: 45,
-    precio: 5500,
+    precio: 170000,
     descripcion:
       "Estudio funcional del piso pélvico en estreñimiento crónico y trastornos defecatorios. Procedimiento no invasivo y bien tolerado.",
     icon: "wave",
@@ -144,7 +144,7 @@ export const serviciosSeed: ServicioFull[] = [
     categoria: "pruebas",
     duracion: "30 min",
     duracionMin: 30,
-    precio: 2500,
+    precio: 75000,
     descripcion:
       "Diagnóstico no invasivo para intolerancia a la lactosa, fructosa, sobrecrecimiento bacteriano y H. pylori.",
     icon: "lung",
@@ -159,7 +159,7 @@ export const serviciosSeed: ServicioFull[] = [
     categoria: "nutricion",
     duracion: "45 min",
     duracionMin: 45,
-    precio: 900,
+    precio: 42000,
     descripcion:
       "Plan alimentario personalizado, manejo de alergias alimentarias, selectividad y acompañamiento en la introducción de alimentos.",
     icon: "carrot",
@@ -170,11 +170,20 @@ export const serviciosSeed: ServicioFull[] = [
   },
 ];
 
-export function formatPrecio(mxn: number): string {
-  return new Intl.NumberFormat("es-MX", {
+export function formatPrecio(colones: number): string {
+  return new Intl.NumberFormat("es-CR", {
     style: "currency",
-    currency: "MXN",
+    currency: "CRC",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(mxn);
+  }).format(colones);
+}
+
+/** Formato compacto para tableros: ₡6,6M, ₡80K, ₡550. */
+export function formatPrecioCompacto(colones: number): string {
+  const abs = Math.abs(colones);
+  if (abs >= 1_000_000)
+    return `₡${(colones / 1_000_000).toFixed(1).replace(".", ",")}M`;
+  if (abs >= 1_000) return `₡${Math.round(colones / 1_000)}K`;
+  return `₡${Math.round(colones)}`;
 }

@@ -118,7 +118,7 @@ export function ServicioFormModal({
               onChange={(e) => set("duracionMin", Number(e.target.value))}
             />
           </Field>
-          <Field label="Precio (MXN)">
+          <Field label="Precio (₡)">
             <Input
               type="number"
               value={form.precio}

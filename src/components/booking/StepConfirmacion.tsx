@@ -29,7 +29,7 @@ export function StepConfirmacion({
   const servicioMeta = serviciosMock.find((m) => m.slug === data.servicioSlug);
 
   const fechaLegible = data.fecha
-    ? new Intl.DateTimeFormat(lang === "es" ? "es-MX" : "en-US", {
+    ? new Intl.DateTimeFormat(lang === "es" ? "es-CR" : "en-US", {
         weekday: "long",
         day: "numeric",
         month: "long",

@@ -336,7 +336,10 @@ export function topServicios(citas: AnalyticsCita[], f: FiltroState) {
 // Embudo de conversión
 // ---------------------------------------------------------------------------
 export function funnel(citas: AnalyticsCita[], f: FiltroState) {
-  const filtered = applyFilters(citas, f);
+  // Misma base que "citas por responsable y estado": respeta período +
+  // categoría + servicio, pero ignora el filtro de estado (el embudo ES la
+  // descomposición por estado). Así ambos gráficos siempre cuadran.
+  const filtered = applyFilters(citas, f, { ignoreEstado: true });
   const agendadas = filtered.length;
   const confirmadas = filtered.filter((c) =>
     ["confirmada", "completada"].includes(c.estado),
@@ -353,11 +356,8 @@ export function funnel(citas: AnalyticsCita[], f: FiltroState) {
 export const RESPONSABLES: AnalyticsCanal[] = ["gastrito", "web", "recepcion", "doctor"];
 
 export function actoresPorEstado(citas: AnalyticsCita[], f: FiltroState) {
-  const base = applyFilters(citas, f, {
-    ignoreCategoria: true,
-    ignoreServicio: true,
-    ignoreEstado: true,
-  });
+  // Misma base que el embudo → la suma por estado coincide con el embudo.
+  const base = applyFilters(citas, f, { ignoreEstado: true });
   const grupos = [
     { key: "Agendadas", test: () => true },
     { key: "Confirmadas", test: (c: AnalyticsCita) => ["confirmada", "completada"].includes(c.estado) },
@@ -377,15 +377,20 @@ export function actoresPorEstado(citas: AnalyticsCita[], f: FiltroState) {
 // Gastrito vs sitio web (todo el historial)
 // ---------------------------------------------------------------------------
 export function canalesSerie() {
+  // Solo meses ya transcurridos y completos: se muestran hasta el mes anterior
+  // al actual (DEMO_HOY), sin datos de julio en adelante. Coherente con el
+  // gráfico de ingresos (cuya parte realizada termina en el mes en curso).
+  const hastaMes = DEMO_HOY.getMonth(); // exclusivo → Ene..(mes-1)
   const byMonth = new Map<number, { ana: number; web: number }>();
   for (const c of analyticsCitas) {
     const m = new Date(c.fecha).getMonth();
+    if (m >= hastaMes) continue;
     const cur = byMonth.get(m) ?? { ana: 0, web: 0 };
     if (c.canal === "gastrito") cur.ana += 1;
     else if (c.canal === "web") cur.web += 1;
     byMonth.set(m, cur);
   }
-  return Array.from({ length: 12 }, (_, m) => ({
+  return Array.from({ length: hastaMes }, (_, m) => ({
     label: MONTHS[m],
     ana: byMonth.get(m)?.ana ?? 0,
     web: byMonth.get(m)?.web ?? 0,
@@ -396,7 +401,9 @@ export function canalesSerie() {
 // Fuera de horario + distribución por hora
 // ---------------------------------------------------------------------------
 export function fueraDeHorario(citas: AnalyticsCita[], f: FiltroState) {
-  const base = applyFilters(citas, f).filter(
+  // Misma base (ignora estado) → gastrito/web totales = los del gráfico de
+  // responsable y estado y de citas registradas.
+  const base = applyFilters(citas, f, { ignoreEstado: true }).filter(
     (c) => c.canal === "gastrito" || c.canal === "web",
   );
   const row = (canal: AnalyticsCanal, label: string) => {
@@ -414,7 +421,7 @@ export function fueraDeHorario(citas: AnalyticsCita[], f: FiltroState) {
 }
 
 export function horaDistribucion(citas: AnalyticsCita[], f: FiltroState) {
-  const base = applyFilters(citas, f).filter(
+  const base = applyFilters(citas, f, { ignoreEstado: true }).filter(
     (c) => c.canal === "gastrito" || c.canal === "web",
   );
   const byHour = new Map<number, { dentro: number; fuera: number }>();

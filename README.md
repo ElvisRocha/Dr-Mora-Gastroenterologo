@@ -85,6 +85,42 @@ VITE_TIMEZONE=America/Mexico_City
 Las claves sensibles **GHL_API_KEY**, **SUPABASE_SERVICE_ROLE_KEY** y los IDs
 de calendario se viven exclusivamente en n8n, nunca en el frontend.
 
+## Novedades — modo demo completo (sin backend)
+
+Esta versión replica, adaptadas al ámbito pediátrico-GI del Dr. Mora, las
+funcionalidades del consultorio hermano. **Todo funciona sin Supabase**: la data
+vive en `src/lib/data/*` y se persiste en `localStorage` mediante un store único
+(`src/store/clinicStore.tsx`, provisto en la raíz de la app). Editar una cita,
+enviar un mensaje o agendar desde el sitio se refleja en el panel al instante.
+
+Módulos del panel administrativo:
+
+| Módulo | Ruta | Qué muestra |
+|---|---|---|
+| **Dashboard** | `/admin/dashboard` | Métricas en vivo, agenda del día, actividad reciente, próximas citas |
+| **Conversaciones** | `/admin/conversaciones` | Bandeja unificada tipo WhatsApp/Instagram/Facebook: lista + hilo + ficha del paciente + vista tablero (kanban por estado). Asistente virtual "Gastrito" |
+| **Lista de espera** | `/admin/lista-espera` | Triage de prioridad, origen, reasignación de cupos liberados |
+| **Agenda** | `/admin/calendario` | Vistas día/semana/mes, bloqueos, indicador de hora actual, origen de cita, acciones (confirmar/cancelar/reagendar), agendar y bloquear inline |
+| **Expediente** | `/admin/pacientes/:id` | Timer de consulta + tabs (resumen, antecedentes, crecimiento, hábito digestivo, consultas, citas) |
+| **Configuración** | `/admin/configuracion` | Pestañas: consultorio, servicios (CRUD), horarios, accesos por rol |
+| **Campana** | (header) | Notificaciones con deep-link a conversaciones / lista de espera |
+
+Sitio público:
+
+- **Botón flotante de WhatsApp** en todas las páginas.
+- **Autogestión de citas** (FAB): reprogramar o cancelar con el código `GK-XXXXX`.
+- **Agendamiento en línea** que crea la cita en la agenda del panel + notificación.
+- **Frase inspiradora** al iniciar sesión (configurable).
+
+Credenciales demo (mock, sin backend):
+
+- `admin@gastrokids.mx` · `admin123` (admin)
+- `dr.mora@gastrokids.mx` · `doctor123` (doctor)
+- `secretaria@gastrokids.mx` · `sec123` (secretaría)
+
+> El estado de la demo se guarda en `localStorage`. Para reiniciarla desde cero,
+> el store expone `resetDemo()` (o borra la clave `gastrokids:clinic:v1`).
+
 ## Sistema de diseño
 
 | Token | HSL | Hex | Uso |

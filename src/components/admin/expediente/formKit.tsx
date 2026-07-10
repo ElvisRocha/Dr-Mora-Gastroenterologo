@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/Input";
 import { TriStateChips } from "@/components/ui/TriStateChips";
 import { useAutosave } from "@/hooks/useAutosave";
 import { useExpedienteEditable } from "@/store/expedienteStore";
-import { cn } from "@/lib/cn";
 import type { ExpedienteMock, TriState } from "@/lib/mock";
 
 // ─── Estado editable de una sección del expediente ─────────────────────────
@@ -159,9 +158,9 @@ export function ToggleCell({
 }
 
 /**
- * Chip Sí/No con un textarea de detalle debajo que solo se **activa** cuando la
- * respuesta es "Sí"; con "No" o sin responder queda deshabilitado y atenuado.
- * Así el detalle se recaba únicamente cuando corresponde.
+ * Chip Sí/No cuyo textarea de detalle solo se **muestra** cuando la respuesta
+ * es "Sí"; con "No" o sin responder el textarea queda oculto. El texto ya
+ * capturado se conserva en el borrador y reaparece si se vuelve a elegir "Sí".
  */
 export function ToggleField({
   label,
@@ -180,7 +179,7 @@ export function ToggleField({
   placeholder: string;
   minH?: string;
 }) {
-  const active = value === true;
+  const show = value === true;
   return (
     <div className="space-y-1.5">
       <div className="flex items-start justify-between gap-2">
@@ -189,14 +188,16 @@ export function ToggleField({
         </span>
         <TriStateChips value={value} onChange={onChange} className="shrink-0" />
       </div>
-      <Textarea
-        value={detail}
-        onChange={(e) => onDetail(e.target.value)}
-        placeholder={active ? placeholder : 'Seleccione “Sí” para agregar detalle'}
-        disabled={!active}
-        aria-disabled={!active}
-        className={cn(minH, !active && "bg-muted/40")}
-      />
+      {show ? (
+        <div className="animate-fade-up">
+          <Textarea
+            value={detail}
+            onChange={(e) => onDetail(e.target.value)}
+            placeholder={placeholder}
+            className={minH}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

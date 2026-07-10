@@ -353,6 +353,19 @@ function StackTotal({ x, y, width, index, rows }: any) {
   );
 }
 
+// Etiqueta de total (dentro + fuera) sobre cada barra apilada por hora.
+function HoraTotal({ x, y, width, index, rows }: any) {
+  const row = rows[index];
+  if (!row) return null;
+  const total = (row.Dentro ?? 0) + (row.Fuera ?? 0);
+  if (total <= 0) return null;
+  return (
+    <text x={x + width / 2} y={y - 4} textAnchor="middle" fontSize={10} fill={C.muted} fontWeight={600}>
+      {total}
+    </text>
+  );
+}
+
 // Etiqueta de total por punto en la vista de área (nivel día).
 function AreaTotal({ x, y, index, rows, which }: any) {
   const row = rows[index];
@@ -694,7 +707,9 @@ function HoraDist({ f }: { f: FiltroState }) {
             <Tooltip cursor={{ fill: "rgba(0,0,0,0.03)" }} labelFormatter={(h) => hourAmPm(h as number, true)} />
             <Legend iconType="circle" wrapperStyle={{ fontSize: 12 }} />
             <Bar dataKey="Dentro" name="En horario" stackId="h" fill={SERIE.dentro} maxBarSize={20} />
-            <Bar dataKey="Fuera" name="Fuera de horario" stackId="h" fill={SERIE.fuera} radius={[3, 3, 0, 0]} maxBarSize={20} />
+            <Bar dataKey="Fuera" name="Fuera de horario" stackId="h" fill={SERIE.fuera} radius={[3, 3, 0, 0]} maxBarSize={20}>
+              <LabelList content={(props: any) => <HoraTotal {...props} rows={data} />} />
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>

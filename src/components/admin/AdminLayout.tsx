@@ -248,7 +248,7 @@ export function AdminLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="sticky top-0 z-10 flex h-[96px] items-center justify-between border-b border-border bg-card/80 px-4 backdrop-blur-sm md:px-6">
+        <header className="sticky top-0 z-30 flex h-[96px] items-center justify-between border-b border-border bg-card/80 px-4 backdrop-blur-sm md:px-6">
           <nav className="flex min-w-0 items-center gap-1.5 text-sm">
             <span className="hidden text-muted-foreground sm:inline">
               Admin

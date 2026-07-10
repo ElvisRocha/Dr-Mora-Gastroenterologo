@@ -484,7 +484,10 @@ export function duracionRealVsEstimada(citas: AnalyticsCita[], f: FiltroState) {
     .slice(0, 8);
 }
 
-// Años disponibles para el filtro.
-export const aniosDisponibles = [
-  ...new Set(analyticsCitas.map((c) => new Date(c.fecha).getFullYear())),
-].sort((a, b) => b - a);
+// Años disponibles para el filtro: rango fijo 2025–2030 (más cualquier año
+// presente en los datos). Descendente.
+export const aniosDisponibles = (() => {
+  const set = new Set<number>([2025, 2026, 2027, 2028, 2029, 2030]);
+  for (const c of analyticsCitas) set.add(new Date(c.fecha).getFullYear());
+  return [...set].sort((a, b) => b - a);
+})();

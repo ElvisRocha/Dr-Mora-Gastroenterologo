@@ -31,6 +31,13 @@ const navItems = [
     badge: "none" as const,
   },
   {
+    to: "/admin/pacientes",
+    label: "Pacientes",
+    icon: Users,
+    roles: ["admin", "doctor", "secretaria"] satisfies Rol[],
+    badge: "none" as const,
+  },
+  {
     to: "/admin/calendario",
     label: "Calendario",
     icon: Calendar,
@@ -50,13 +57,6 @@ const navItems = [
     icon: ClipboardList,
     roles: ["admin", "doctor", "secretaria"] satisfies Rol[],
     badge: "listaEspera" as const,
-  },
-  {
-    to: "/admin/pacientes",
-    label: "Pacientes",
-    icon: Users,
-    roles: ["admin", "doctor", "secretaria"] satisfies Rol[],
-    badge: "none" as const,
   },
 ] as const;
 

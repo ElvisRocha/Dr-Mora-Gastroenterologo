@@ -16,6 +16,8 @@ import Dashboard from "@/pages/admin/Dashboard";
 import Pacientes from "@/pages/admin/Pacientes";
 import PacienteDetalle from "@/pages/admin/PacienteDetalle";
 import Calendario from "@/pages/admin/Calendario";
+import Conversaciones from "@/pages/admin/Conversaciones";
+import ListaEspera from "@/pages/admin/ListaEspera";
 import Configuracion from "@/pages/admin/Configuracion";
 
 function ScrollToTop() {
@@ -54,6 +56,8 @@ export default function App() {
             <Route path="pacientes" element={<Pacientes />} />
             <Route path="pacientes/:id" element={<PacienteDetalle />} />
             <Route path="calendario" element={<Calendario />} />
+            <Route path="conversaciones" element={<Conversaciones />} />
+            <Route path="lista-espera" element={<ListaEspera />} />
             <Route element={<ProtectedRoute roles={["admin"]} />}>
               <Route path="configuracion" element={<Configuracion />} />
             </Route>

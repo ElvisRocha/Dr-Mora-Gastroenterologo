@@ -3,8 +3,10 @@ import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Calendar,
   ChevronDown,
+  ClipboardList,
   LayoutDashboard,
   LogOut,
+  MessagesSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Settings,
@@ -13,6 +15,8 @@ import {
 } from "lucide-react";
 import { useAuth, type Rol } from "@/hooks/useAuth";
 import { ExpedienteStoreProvider } from "@/store/expedienteStore";
+import { useClinic } from "@/store/clinicStore";
+import { NotificacionesBell } from "@/components/admin/NotificacionesBell";
 import { cn } from "@/lib/cn";
 import logoUrl from "@/assets/logo.png";
 import faviconUrl from "@/assets/favicon.png";
@@ -23,18 +27,35 @@ const navItems = [
     label: "Dashboard",
     icon: LayoutDashboard,
     roles: ["admin", "doctor", "secretaria"] satisfies Rol[],
-  },
-  {
-    to: "/admin/pacientes",
-    label: "Pacientes",
-    icon: Users,
-    roles: ["admin", "doctor", "secretaria"] satisfies Rol[],
+    badge: "none" as const,
   },
   {
     to: "/admin/calendario",
     label: "Calendario",
     icon: Calendar,
     roles: ["admin", "doctor", "secretaria"] satisfies Rol[],
+    badge: "none" as const,
+  },
+  {
+    to: "/admin/conversaciones",
+    label: "Conversaciones",
+    icon: MessagesSquare,
+    roles: ["admin", "doctor", "secretaria"] satisfies Rol[],
+    badge: "conversaciones" as const,
+  },
+  {
+    to: "/admin/lista-espera",
+    label: "Lista de espera",
+    icon: ClipboardList,
+    roles: ["admin", "doctor", "secretaria"] satisfies Rol[],
+    badge: "listaEspera" as const,
+  },
+  {
+    to: "/admin/pacientes",
+    label: "Pacientes",
+    icon: Users,
+    roles: ["admin", "doctor", "secretaria"] satisfies Rol[],
+    badge: "none" as const,
   },
 ] as const;
 
@@ -42,6 +63,8 @@ const breadcrumbLabels: Record<string, string> = {
   dashboard: "Dashboard",
   pacientes: "Pacientes",
   calendario: "Calendario",
+  conversaciones: "Conversaciones",
+  "lista-espera": "Lista de espera",
   configuracion: "Configuración",
 };
 
@@ -61,8 +84,15 @@ const COLLAPSED_KEY = "gastrokids:admin:sidebarCollapsed";
 
 export function AdminLayout() {
   const { user, signOut, hasRole } = useAuth();
+  const { conversaciones, listaEspera } = useClinic();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const badgeCounts = {
+    conversaciones: conversaciones.reduce((a, c) => a + (c.noLeidos > 0 ? 1 : 0), 0),
+    listaEspera: listaEspera.filter((e) => e.estado === "pendiente").length,
+    none: 0,
+  };
 
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window === "undefined") return false;
@@ -146,6 +176,7 @@ export function AdminLayout() {
               .filter((it) => hasRole([...it.roles]))
               .map((item) => {
                 const Icon = item.icon;
+                const count = badgeCounts[item.badge];
                 return (
                   <li key={item.to}>
                     <NavLink
@@ -153,7 +184,7 @@ export function AdminLayout() {
                       title={collapsed ? item.label : undefined}
                       className={({ isActive }) =>
                         cn(
-                          "flex items-center rounded-lg text-sm font-medium transition-colors",
+                          "relative flex items-center rounded-lg text-sm font-medium transition-colors",
                           collapsed
                             ? "justify-center py-3"
                             : "gap-3 px-3 py-2.5",
@@ -167,7 +198,18 @@ export function AdminLayout() {
                         size={collapsed ? 18 : 16}
                         strokeWidth={1.6}
                       />
-                      {!collapsed ? item.label : null}
+                      {!collapsed ? (
+                        <span className="flex-1">{item.label}</span>
+                      ) : null}
+                      {count > 0 ? (
+                        collapsed ? (
+                          <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-coral" />
+                        ) : (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-coral px-1.5 text-[10px] font-semibold text-offwhite">
+                            {count > 99 ? "99+" : count}
+                          </span>
+                        )
+                      ) : null}
                     </NavLink>
                   </li>
                 );
@@ -227,14 +269,17 @@ export function AdminLayout() {
             ))}
           </nav>
 
-          {user ? (
-            <UserMenu
-              user={user}
-              canConfig={hasRole(["admin", "doctor"])}
-              onConfig={() => navigate("/admin/configuracion")}
-              onLogout={handleLogout}
-            />
-          ) : null}
+          <div className="flex items-center gap-1.5">
+            <NotificacionesBell />
+            {user ? (
+              <UserMenu
+                user={user}
+                canConfig={hasRole(["admin", "doctor"])}
+                onConfig={() => navigate("/admin/configuracion")}
+                onLogout={handleLogout}
+              />
+            ) : null}
+          </div>
         </header>
 
         <main className="flex-1 px-5 py-6 md:px-6 md:py-8">

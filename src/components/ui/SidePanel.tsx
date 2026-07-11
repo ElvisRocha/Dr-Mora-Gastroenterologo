@@ -16,6 +16,7 @@ export function SidePanel({
   footer,
   children,
   widthClass = "sm:max-w-2xl lg:max-w-3xl xl:max-w-4xl",
+  bare = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -25,6 +26,9 @@ export function SidePanel({
   footer?: ReactNode;
   children: ReactNode;
   widthClass?: string;
+  /** Sin backdrop y con el fondo "traspasable" (para montar sobre un calendario
+   *  interactivo, como el modal de agendar desde la lista de espera). */
+  bare?: boolean;
 }) {
   // Se mantiene montado durante la animación de salida; el drawer se desmonta
   // al terminar su animación (onAnimationEnd), igual que en el consultorio de
@@ -52,24 +56,27 @@ export function SidePanel({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50"
+      className={cn("fixed inset-0 z-50", bare && "pointer-events-none")}
       role="dialog"
       aria-modal="true"
       aria-label={title}
     >
-      <div
-        className={cn(
-          "absolute inset-0 bg-foreground/30 backdrop-blur-[2px]",
-          open ? "animate-overlay-in" : "animate-overlay-out",
-        )}
-        onClick={onClose}
-      />
+      {bare ? null : (
+        <div
+          className={cn(
+            "absolute inset-0 bg-foreground/30 backdrop-blur-[2px]",
+            open ? "animate-overlay-in" : "animate-overlay-out",
+          )}
+          onClick={onClose}
+        />
+      )}
       <div
         onAnimationEnd={(e) => {
           if (e.target === e.currentTarget && !open) setRender(false);
         }}
         className={cn(
           "absolute inset-y-0 right-0 flex w-full flex-col border-l border-border bg-card shadow-elevated",
+          bare && "pointer-events-auto",
           widthClass,
           open ? "animate-slide-in-right" : "animate-slide-out-right",
         )}

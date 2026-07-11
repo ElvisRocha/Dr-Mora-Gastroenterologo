@@ -89,7 +89,15 @@ const ESTADO_STYLE: Record<CitaFull["estado"], string> = {
 const topRemFor = (hour: number, minute: number) =>
   (((hour - FIRST_HOUR) * 60 + minute) / SLOT_MINUTES) * SLOT_HEIGHT_REM;
 
-export default function Calendario() {
+export default function Calendario({
+  pickMode = false,
+  onPickSlot,
+}: {
+  /** Modo selector: el clic en una celda vacía reporta la franja en vez de
+   *  abrir el panel interno (se usa dentro del modal de la lista de espera). */
+  pickMode?: boolean;
+  onPickSlot?: (date: Date, hour: number, minute: number) => void;
+} = {}) {
   const { t } = useLang();
   const navigate = useNavigate();
   const { citas, bloqueos, servicios, horarios } = useClinic();
@@ -192,6 +200,11 @@ export default function Calendario() {
     !estaAbierto(horarios, day.getDay(), slot.hour * 60 + slot.minute);
 
   const openAgendar = (date?: Date, hour?: number, minute?: number) => {
+    // En modo selector reportamos la franja al modal contenedor.
+    if (pickMode) {
+      if (date && hour != null) onPickSlot?.(date, hour, minute ?? 0);
+      return;
+    }
     setAgendarSeed({ date, hour, minute });
     setAgendarOpen(true);
   };
@@ -207,6 +220,8 @@ export default function Calendario() {
   // Clic en una cita: abre el expediente. Si está agendada o confirmada, además
   // inicia la consulta (cronómetro). Realizadas/canceladas/no asistidas: ver.
   const openCita = (cita: CitaFull) => {
+    // En modo selector las citas son solo contexto de disponibilidad.
+    if (pickMode) return;
     const iniciable = cita.estado === "agendada" || cita.estado === "confirmada";
     navigate(
       `/admin/pacientes/${cita.pacienteId}`,
@@ -253,9 +268,11 @@ export default function Calendario() {
               <span className="opacity-70">No asistió · </span>
               {nombrePaciente}
             </p>
-            <div className="opacity-0 transition-opacity group-hover:opacity-100">
-              <CitaActionsMenu cita={cita} compact />
-            </div>
+            {pickMode ? null : (
+              <div className="opacity-0 transition-opacity group-hover:opacity-100">
+                <CitaActionsMenu cita={cita} compact />
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -265,9 +282,11 @@ export default function Calendario() {
               </p>
               <div className="flex shrink-0 items-center gap-0.5">
                 <src.Icon size={11} className={cn(src.color, "shrink-0")} />
-                <div className="opacity-0 transition-opacity group-hover:opacity-100">
-                  <CitaActionsMenu cita={cita} compact />
-                </div>
+                {pickMode ? null : (
+                  <div className="opacity-0 transition-opacity group-hover:opacity-100">
+                    <CitaActionsMenu cita={cita} compact />
+                  </div>
+                )}
               </div>
             </div>
             <p className="truncate text-[11px] leading-tight">{nombrePaciente}</p>
@@ -405,7 +424,13 @@ export default function Calendario() {
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-start justify-between gap-3 lg:flex-row lg:items-center">
-        <h2 className="font-display text-2xl font-semibold text-foreground">Agenda</h2>
+        {pickMode ? (
+          <p className="text-sm text-muted-foreground">
+            Haz clic en un espacio libre para elegir la fecha y hora.
+          </p>
+        ) : (
+          <h2 className="font-display text-2xl font-semibold text-foreground">Agenda</h2>
+        )}
         <div className="flex flex-wrap items-center gap-2">
           <div
             className="inline-flex items-center rounded-full border border-border bg-muted/40 p-1"
@@ -427,6 +452,8 @@ export default function Calendario() {
               </button>
             ))}
           </div>
+          {pickMode ? null : (
+            <>
           <Button size="sm" variant="outline" onClick={() => setBloqueoOpen(true)}>
             <Ban size={15} />
             Bloquear horario
@@ -443,6 +470,8 @@ export default function Calendario() {
             <CalendarPlus size={15} />
             Agendar cita
           </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -597,18 +626,24 @@ export default function Calendario() {
         })}
       </div>
 
-      <AgendarCitaModal
-        open={agendarOpen}
-        onClose={() => setAgendarOpen(false)}
-        defaultDate={agendarSeed.date}
-        defaultHour={agendarSeed.hour}
-        defaultMinute={agendarSeed.minute}
-      />
-      <BloqueoModal open={bloqueoOpen} onClose={() => setBloqueoOpen(false)} defaultDate={currentDate} />
-      <BloqueosListModal
-        open={bloqueosListOpen}
-        onClose={() => setBloqueosListOpen(false)}
-      />
+      {/* En modo selector el panel de agendar y los de bloqueo los gestiona el
+          modal contenedor (lista de espera), no el calendario. */}
+      {pickMode ? null : (
+        <>
+          <AgendarCitaModal
+            open={agendarOpen}
+            onClose={() => setAgendarOpen(false)}
+            defaultDate={agendarSeed.date}
+            defaultHour={agendarSeed.hour}
+            defaultMinute={agendarSeed.minute}
+          />
+          <BloqueoModal open={bloqueoOpen} onClose={() => setBloqueoOpen(false)} defaultDate={currentDate} />
+          <BloqueosListModal
+            open={bloqueosListOpen}
+            onClose={() => setBloqueosListOpen(false)}
+          />
+        </>
+      )}
     </div>
   );
 }

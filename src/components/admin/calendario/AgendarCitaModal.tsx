@@ -50,12 +50,20 @@ export function AgendarCitaModal({
   defaultPacienteId,
   reagendarCita,
   onSaved,
+  bare = false,
+  slotPick,
+  widthClass,
 }: {
   open: boolean;
   onClose: () => void;
   defaultDate?: Date;
   defaultHour?: number;
   defaultMinute?: number;
+  /** Sin backdrop, para montar el panel sobre el calendario (lista de espera). */
+  bare?: boolean;
+  /** Franja elegida en el calendario: actualiza solo fecha/hora (sin resetear). */
+  slotPick?: { date: Date; hour: number; minute: number } | null;
+  widthClass?: string;
   /** Paciente preseleccionado (p. ej. al agendar desde la lista de espera). */
   defaultPacienteId?: string;
   /** Si se pasa, el panel reagenda (mueve) esa cita en vez de crear una nueva. */
@@ -110,6 +118,17 @@ export function AgendarCitaModal({
     setDuracion("30");
     setNotas("");
   }, [open, defaultDate, defaultHour, defaultMinute, defaultPacienteId, reagendarCita]);
+
+  // Al elegir una franja en el calendario (lista de espera) solo cambiamos
+  // fecha y hora, conservando paciente/servicio/notas ya escritos.
+  useEffect(() => {
+    if (!open || !slotPick) return;
+    setFecha(format(slotPick.date, "yyyy-MM-dd"));
+    const { hour12: h12, ampm: ap } = from24h(slotPick.hour);
+    setHour12(h12);
+    setAmpm(ap);
+    setMinute(String(slotPick.minute).padStart(2, "0"));
+  }, [slotPick, open]);
 
   const servicio = useMemo(
     () => serviciosActivos.find((s) => s.id === servicioId),
@@ -192,7 +211,8 @@ export function AgendarCitaModal({
           ? "Mueve la cita vigente del paciente a un nuevo espacio."
           : "Crea una cita para un paciente desde el calendario admin."
       }
-      widthClass="sm:max-w-lg lg:max-w-xl"
+      bare={bare}
+      widthClass={widthClass ?? "sm:max-w-lg lg:max-w-xl"}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>

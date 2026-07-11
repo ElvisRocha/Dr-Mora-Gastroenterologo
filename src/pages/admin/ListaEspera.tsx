@@ -19,10 +19,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Field, Input, Select, Textarea } from "@/components/ui/Input";
-import {
-  AgendarCitaModal,
-  type ReagendarCita,
-} from "@/components/admin/calendario/AgendarCitaModal";
+import { AgendarCitaCalendarModal } from "@/components/admin/calendario/AgendarCitaCalendarModal";
+import type { ReagendarCita } from "@/components/admin/calendario/AgendarCitaModal";
 import {
   PRIORIDAD_LABEL,
   type ListaEsperaMock,
@@ -405,12 +403,25 @@ export default function ListaEspera() {
         }}
       />
 
-      {/* Mismo panel de "Agendar cita" del calendario. Si el paciente ya tiene
-          una cita vigente, abre en modo reagendar (mueve esa cita). */}
-      <AgendarCitaModal
+      {/* Abre el calendario completo + el panel de "Agendar/Reagendar cita",
+          para elegir la celda libre. Si el paciente ya tiene una cita vigente,
+          abre en modo reagendar (mueve esa cita). */}
+      <AgendarCitaCalendarModal
         open={!!agendarRow}
         onClose={() => setAgendarRow(null)}
         defaultPacienteId={agendarRow?.pacienteId}
+        pacienteNombre={
+          agendarRow
+            ? (() => {
+                const p = agendarRow.pacienteId
+                  ? pacientePorId(agendarRow.pacienteId)
+                  : null;
+                return p
+                  ? `${p.nombre} ${p.apellidoPaterno}`
+                  : agendarRow.nombre;
+              })()
+            : undefined
+        }
         reagendarCita={agendarReagendar}
         onSaved={handleAgendarSaved}
       />

@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarPlus, ChevronLeft, ChevronRight, Lock, Plus } from "lucide-react";
+import {
+  Ban,
+  CalendarPlus,
+  ChevronLeft,
+  ChevronRight,
+  Lock,
+  Plus,
+} from "lucide-react";
 import {
   addDays,
   addMinutes,
@@ -34,6 +41,7 @@ import { SOURCE_CONFIG } from "@/components/admin/calendario/citaSource";
 import { CitaActionsMenu } from "@/components/admin/calendario/CitaActionsMenu";
 import { AgendarCitaModal } from "@/components/admin/calendario/AgendarCitaModal";
 import { BloqueoModal } from "@/components/admin/calendario/BloqueoModal";
+import { BloqueosListModal } from "@/components/admin/calendario/BloqueosListModal";
 
 type View = "dia" | "semana" | "mes";
 
@@ -89,6 +97,7 @@ export default function Calendario() {
     minute?: number;
   }>({});
   const [bloqueoOpen, setBloqueoOpen] = useState(false);
+  const [bloqueosListOpen, setBloqueosListOpen] = useState(false);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 60_000);
@@ -392,8 +401,16 @@ export default function Calendario() {
             ))}
           </div>
           <Button size="sm" variant="outline" onClick={() => setBloqueoOpen(true)}>
+            <Ban size={15} />
+            Bloquear horario
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setBloqueosListOpen(true)}
+          >
             <Lock size={15} />
-            Bloquear
+            Bloqueos
           </Button>
           <Button size="sm" onClick={() => openAgendar(currentDate)}>
             <CalendarPlus size={15} />
@@ -561,6 +578,10 @@ export default function Calendario() {
         defaultMinute={agendarSeed.minute}
       />
       <BloqueoModal open={bloqueoOpen} onClose={() => setBloqueoOpen(false)} defaultDate={currentDate} />
+      <BloqueosListModal
+        open={bloqueosListOpen}
+        onClose={() => setBloqueosListOpen(false)}
+      />
     </div>
   );
 }

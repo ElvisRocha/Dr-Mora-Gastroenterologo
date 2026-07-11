@@ -112,6 +112,7 @@ type ClinicStoreValue = ClinicState & {
   getCita: (id: string) => CitaFull | undefined;
   // Bloqueos
   addBloqueo: (b: BloqueoMock) => void;
+  updateBloqueo: (id: string, patch: Partial<BloqueoMock>) => void;
   removeBloqueo: (id: string) => void;
   // Conversaciones
   enviarMensaje: (
@@ -184,6 +185,13 @@ export function ClinicStoreProvider({ children }: { children: ReactNode }) {
   // ---- Bloqueos ----------------------------------------------------------
   const addBloqueo = useCallback(
     (b: BloqueoMock) => patch((s) => ({ bloqueos: [...s.bloqueos, b] })),
+    [patch],
+  );
+  const updateBloqueo = useCallback(
+    (id: string, p: Partial<BloqueoMock>) =>
+      patch((s) => ({
+        bloqueos: s.bloqueos.map((b) => (b.id === id ? { ...b, ...p } : b)),
+      })),
     [patch],
   );
   const removeBloqueo = useCallback(
@@ -353,6 +361,7 @@ export function ClinicStoreProvider({ children }: { children: ReactNode }) {
       updateCita,
       getCita,
       addBloqueo,
+      updateBloqueo,
       removeBloqueo,
       enviarMensaje,
       marcarConversacionLeida,
@@ -379,6 +388,7 @@ export function ClinicStoreProvider({ children }: { children: ReactNode }) {
       updateCita,
       getCita,
       addBloqueo,
+      updateBloqueo,
       removeBloqueo,
       enviarMensaje,
       marcarConversacionLeida,

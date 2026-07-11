@@ -5,18 +5,26 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select } from "@/components/ui/Input";
 import { useClinic } from "@/store/clinicStore";
-import { BLOQUEO_LABEL, type BloqueoCategoria } from "@/lib/data/bloqueos";
+import {
+  BLOQUEO_LABEL,
+  type BloqueoCategoria,
+  type BloqueoMock,
+} from "@/lib/data/bloqueos";
 
 export function BloqueoModal({
   open,
   onClose,
   defaultDate,
+  bloqueo,
 }: {
   open: boolean;
   onClose: () => void;
   defaultDate?: Date;
+  /** Si se pasa, el modal edita el bloqueo existente en lugar de crear uno. */
+  bloqueo?: BloqueoMock | null;
 }) {
-  const { addBloqueo } = useClinic();
+  const { addBloqueo, updateBloqueo } = useClinic();
+  const editando = !!bloqueo;
   const [fecha, setFecha] = useState("");
   const [inicio, setInicio] = useState("14:00");
   const [fin, setFin] = useState("15:00");
@@ -25,8 +33,29 @@ export function BloqueoModal({
   const [motivo, setMotivo] = useState("");
 
   useEffect(() => {
-    if (open) setFecha(format(defaultDate ?? new Date(), "yyyy-MM-dd"));
-  }, [open, defaultDate]);
+    if (!open) return;
+    if (bloqueo) {
+      const bi = new Date(bloqueo.inicio);
+      const bf = new Date(bloqueo.fin);
+      setFecha(format(bi, "yyyy-MM-dd"));
+      setInicio(format(bi, "HH:mm"));
+      setFin(format(bf, "HH:mm"));
+      setTodoElDia(bloqueo.todoElDia);
+      setCategoria(bloqueo.categoria);
+      setMotivo(
+        bloqueo.motivo && bloqueo.motivo !== BLOQUEO_LABEL[bloqueo.categoria]
+          ? bloqueo.motivo
+          : "",
+      );
+    } else {
+      setFecha(format(defaultDate ?? new Date(), "yyyy-MM-dd"));
+      setInicio("14:00");
+      setFin("15:00");
+      setTodoElDia(false);
+      setCategoria("personal");
+      setMotivo("");
+    }
+  }, [open, defaultDate, bloqueo]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,18 +79,24 @@ export function BloqueoModal({
         return;
       }
     }
-    addBloqueo({
-      id: `bl-${Date.now()}`,
+    const datos = {
       inicio: start.toISOString(),
       fin: end.toISOString(),
       todoElDia,
       categoria,
       motivo: motivo.trim() || BLOQUEO_LABEL[categoria],
-    });
-    toast.success("Horario bloqueado", {
-      description: `${BLOQUEO_LABEL[categoria]} · ${format(start, "dd/MM")}`,
-    });
-    setMotivo("");
+    };
+    if (bloqueo) {
+      updateBloqueo(bloqueo.id, datos);
+      toast.success("Bloqueo actualizado", {
+        description: `${BLOQUEO_LABEL[categoria]} · ${format(start, "dd/MM")}`,
+      });
+    } else {
+      addBloqueo({ id: `bl-${Date.now()}`, ...datos });
+      toast.success("Horario bloqueado", {
+        description: `${BLOQUEO_LABEL[categoria]} · ${format(start, "dd/MM")}`,
+      });
+    }
     onClose();
   };
 
@@ -69,7 +104,7 @@ export function BloqueoModal({
     <Modal
       open={open}
       onClose={onClose}
-      title="Bloquear horario"
+      title={editando ? "Editar bloqueo" : "Bloquear horario"}
       description="El tiempo bloqueado no estará disponible para agendar."
       size="md"
     >
@@ -115,7 +150,7 @@ export function BloqueoModal({
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancelar
           </Button>
-          <Button type="submit">Bloquear</Button>
+          <Button type="submit">{editando ? "Guardar cambios" : "Bloquear"}</Button>
         </div>
       </form>
     </Modal>

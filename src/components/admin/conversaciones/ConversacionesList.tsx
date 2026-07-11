@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Search, Pin, PauseCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Search, Pin, PauseCircle, ChevronDown } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/cn";
@@ -36,6 +36,13 @@ export function ConversacionesList({
 }) {
   const [q, setQ] = useState("");
   const [estado, setEstado] = useState<EstadoFilter>("todas");
+  const PAGE = 20;
+  const [visible, setVisible] = useState(PAGE);
+
+  // Al cambiar de búsqueda o filtro, volvemos a la primera "página".
+  useEffect(() => {
+    setVisible(PAGE);
+  }, [q, estado]);
 
   const ultimoPorConv = useMemo(() => {
     const map = new Map<string, MensajeMock>();
@@ -78,6 +85,8 @@ export function ConversacionesList({
   }, [conversaciones, q, estado, ultimoPorConv]);
 
   const noLeidasCount = conversaciones.filter((c) => c.noLeidos > 0).length;
+  const shown = filtered.slice(0, visible);
+  const restantes = filtered.length - shown.length;
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -125,7 +134,7 @@ export function ConversacionesList({
           </p>
         ) : (
           <ul>
-            {filtered.map((c) => {
+            {shown.map((c) => {
               const last = ultimoPorConv.get(c.id);
               const selected = c.id === selectedId;
               const paused = c.modo === "humano";
@@ -216,6 +225,23 @@ export function ConversacionesList({
             })}
           </ul>
         )}
+
+        {restantes > 0 ? (
+          <div className="px-3 py-3">
+            <button
+              type="button"
+              onClick={() => setVisible((v) => v + PAGE)}
+              className="flex w-full items-center justify-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-medium text-navy transition-colors hover:bg-navy/5"
+            >
+              <ChevronDown size={14} strokeWidth={2} />
+              Cargar más… ({restantes})
+            </button>
+          </div>
+        ) : filtered.length > PAGE ? (
+          <p className="px-3 py-3 text-center text-[11px] text-muted-foreground">
+            {filtered.length} conversaciones
+          </p>
+        ) : null}
       </div>
     </div>
   );

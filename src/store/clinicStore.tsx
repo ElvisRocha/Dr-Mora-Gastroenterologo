@@ -16,6 +16,7 @@ import {
   type MensajeMock,
   type EventoMock,
 } from "@/lib/data/conversaciones";
+import { generarConversaciones } from "@/lib/data/generarConversaciones";
 import { listaEsperaSeed, type ListaEsperaMock } from "@/lib/data/listaEspera";
 import {
   notificacionesSeed,
@@ -43,7 +44,7 @@ export type CitaFull = CitaMock & {
   pacienteNombre?: string; // para citas de leads sin expediente
 };
 
-const STORAGE_KEY = "gastrokids:clinic:v3";
+const STORAGE_KEY = "gastrokids:clinic:v4";
 
 type ClinicState = {
   citas: CitaFull[];
@@ -66,12 +67,17 @@ function seedState(): ClinicState {
     source: SOURCE_BY_INDEX[i % 4],
     referenceCode: `GK-${10500 + i}`,
   }));
+  // Conversaciones: seed curado + volumen generado para "poblar" la bandeja.
+  const generadas = generarConversaciones();
   return {
     citas,
     bloqueos: bloqueosSeed.map((b) => ({ ...b })),
-    conversaciones: conversacionesSeed.map((c) => ({ ...c })),
-    mensajes: mensajesSeed.map((m) => ({ ...m })),
-    eventos: eventosSeed.map((e) => ({ ...e })),
+    conversaciones: [
+      ...conversacionesSeed.map((c) => ({ ...c })),
+      ...generadas.conversaciones,
+    ],
+    mensajes: [...mensajesSeed.map((m) => ({ ...m })), ...generadas.mensajes],
+    eventos: [...eventosSeed.map((e) => ({ ...e })), ...generadas.eventos],
     listaEspera: listaEsperaSeed.map((l) => ({ ...l })),
     notificaciones: notificacionesSeed.map((n) => ({ ...n })),
     servicios: serviciosSeed.map((s) => ({ ...s })),

@@ -71,12 +71,18 @@ const CLOSED_STYLE: React.CSSProperties = {
     "repeating-linear-gradient(45deg, hsl(215 16% 60% / 0.10) 0, hsl(215 16% 60% / 0.10) 1px, transparent 1px, transparent 6px)",
 };
 
+// Colores de estado con la paleta primaria del sitio:
+//  · Programadas (agendada)  → naranja (amber)
+//  · Confirmadas             → azul pastel (navy suave)
+//  · Completadas (realizada) → verde (leaf)
+//  · No asistió              → gris (compacto)
+//  · Canceladas              → coral (atenuado)
 const ESTADO_STYLE: Record<CitaFull["estado"], string> = {
-  agendada: "bg-navy/10 text-navy border-navy/25",
-  confirmada: "bg-leaf/15 text-leaf border-leaf/30",
-  realizada: "bg-muted text-muted-foreground border-border",
+  agendada: "bg-amber/15 text-amber border-amber/30",
+  confirmada: "bg-navy/10 text-navy border-navy/25",
+  realizada: "bg-leaf/15 text-leaf border-leaf/30",
   cancelada: "bg-coral/12 text-coral border-coral/30 opacity-70",
-  no_asistio: "bg-amber/15 text-amber border-amber/30",
+  no_asistio: "bg-muted text-muted-foreground border-border",
 };
 
 // Posición vertical (rem) de un momento del día dentro de la cuadrícula.
@@ -213,9 +219,20 @@ export default function Calendario() {
     const start = new Date(cita.fechaHora);
     const dur = cita.duracionMin || findDuracion(cita.servicioSlug);
     const top = topRemFor(start.getHours(), start.getMinutes());
-    const height = (dur / SLOT_MINUTES) * SLOT_HEIGHT_REM;
+    const fullHeight = (dur / SLOT_MINUTES) * SLOT_HEIGHT_REM;
     const paciente = pacientePorId(cita.pacienteId);
     const src = SOURCE_CONFIG[cita.source];
+    const nombrePaciente = paciente
+      ? `${paciente.nombre} ${paciente.apellidoPaterno}`
+      : (cita.pacienteNombre ?? "Sin paciente");
+
+    // "No asistió" se muestra compacto (poco tamaño): media altura y una sola
+    // línea con el nombre, para que reste protagonismo en la agenda.
+    const compact = cita.estado === "no_asistio";
+    const height = compact
+      ? Math.min(fullHeight, SLOT_HEIGHT_REM * 1.5)
+      : fullHeight;
+
     return (
       <div
         role="button"
@@ -230,25 +247,35 @@ export default function Calendario() {
         )}
         style={{ top: `${top}rem`, height: `${height}rem` }}
       >
-        <div className="flex items-start justify-between gap-1">
-          <p className="truncate text-[11px] font-medium leading-tight">
-            {servicioNombre(cita.servicioSlug)}
-          </p>
-          <div className="flex shrink-0 items-center gap-0.5">
-            <src.Icon size={11} className={cn(src.color, "shrink-0")} />
+        {compact ? (
+          <div className="flex items-center justify-between gap-1">
+            <p className="truncate text-[10px] font-medium leading-tight">
+              <span className="opacity-70">No asistió · </span>
+              {nombrePaciente}
+            </p>
             <div className="opacity-0 transition-opacity group-hover:opacity-100">
               <CitaActionsMenu cita={cita} compact />
             </div>
           </div>
-        </div>
-        <p className="truncate text-[11px] leading-tight">
-          {paciente
-            ? `${paciente.nombre} ${paciente.apellidoPaterno}`
-            : (cita.pacienteNombre ?? "Sin paciente")}
-        </p>
-        <p className="truncate font-mono text-[10px] leading-tight opacity-80">
-          {formatRange(cita)}
-        </p>
+        ) : (
+          <>
+            <div className="flex items-start justify-between gap-1">
+              <p className="truncate text-[11px] font-medium leading-tight">
+                {servicioNombre(cita.servicioSlug)}
+              </p>
+              <div className="flex shrink-0 items-center gap-0.5">
+                <src.Icon size={11} className={cn(src.color, "shrink-0")} />
+                <div className="opacity-0 transition-opacity group-hover:opacity-100">
+                  <CitaActionsMenu cita={cita} compact />
+                </div>
+              </div>
+            </div>
+            <p className="truncate text-[11px] leading-tight">{nombrePaciente}</p>
+            <p className="truncate font-mono text-[10px] leading-tight opacity-80">
+              {formatRange(cita)}
+            </p>
+          </>
+        )}
       </div>
     );
   };

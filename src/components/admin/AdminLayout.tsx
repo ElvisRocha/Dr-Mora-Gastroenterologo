@@ -272,6 +272,9 @@ export function AdminLayout() {
           </nav>
 
           <div className="flex items-center gap-1.5">
+            {/* Slot del cronómetro de consulta: el expediente hace portal aquí
+                cuando está montado. Vacío ⇒ no ocupa espacio. */}
+            <div id="consultation-timer-slot" className="flex items-center empty:hidden" />
             <NotificacionesBell />
             {user ? (
               <UserMenu

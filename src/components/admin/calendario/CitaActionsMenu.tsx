@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   FileText,
   MoreVertical,
+  Play,
   UserX,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -84,6 +85,18 @@ export function CitaActionsMenu({
       onClick: () => setEstado("no_asistio", "Marcada como no asistió"),
       show: cita.estado !== "no_asistio" && cita.estado !== "realizada",
       tone: "text-amber",
+    },
+    {
+      label: "Iniciar consulta",
+      icon: Play,
+      onClick: () => {
+        setOpen(false);
+        navigate(`/admin/pacientes/${cita.pacienteId}`, {
+          state: { fromCalendario: true, citaId: cita.id },
+        });
+      },
+      show: cita.estado !== "cancelada" && cita.estado !== "no_asistio",
+      tone: "text-leaf",
     },
     {
       label: "Abrir expediente",

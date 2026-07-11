@@ -235,6 +235,12 @@ export type PacienteMock = {
   fechaRegistro?: string;
   tutorParentesco?: string;
   direccion?: string;
+  /** Formulario de primera vez completado (intake inicial). */
+  formularioPrimeraVez?: boolean;
+  /** Formulario de seguimiento completado. */
+  formularioSeguimiento?: boolean;
+  /** Fecha (ISO) en que se sincronizó el expediente original migrado. */
+  sincronizadoAt?: string | null;
 };
 
 const pacientesBase: PacienteMock[] = [

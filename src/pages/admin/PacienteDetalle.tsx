@@ -7,16 +7,17 @@ import {
   ClipboardList,
   FileText,
   Mail,
+  MapPin,
   Pencil,
   Phone,
-  Plus,
   Stethoscope,
   TrendingUp,
+  User,
   Utensils,
 } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { formatearEdad } from "@/lib/mock";
+import { formatearEdad, TIPO_ID_LABEL } from "@/lib/mock";
 import { usePaciente } from "@/store/expedienteStore";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -30,7 +31,12 @@ import { ExpedienteConsultas } from "@/components/admin/expediente/ExpedienteCon
 import { ExpedienteCitas } from "@/components/admin/expediente/ExpedienteCitas";
 import { EditarPacienteModal } from "@/components/admin/EditarPacienteModal";
 import { ConsultaFormModal } from "@/components/admin/ConsultaFormModal";
-import { ConsultationTimer } from "@/components/admin/expediente/ConsultationTimer";
+import { HeaderConsultationTimer } from "@/components/admin/expediente/HeaderConsultationTimer";
+import { LlenarFormularioButton } from "@/components/admin/LlenarFormularioButton";
+import { ExpedienteOriginalModal } from "@/components/admin/ExpedienteOriginalModal";
+import { SincronizarExpedienteButton } from "@/components/admin/SincronizarExpedienteButton";
+import { PacienteAccionesMenu } from "@/components/admin/PacienteAccionesMenu";
+import type { FormularioTipo } from "@/components/admin/FormularioPacienteModal";
 
 type TabKey =
   | "resumen"
@@ -57,6 +63,8 @@ export default function PacienteDetalle() {
   const [tab, setTab] = useState<TabKey>("resumen");
   const [showEdit, setShowEdit] = useState(false);
   const [showNewConsulta, setShowNewConsulta] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
+  const [preferredForm, setPreferredForm] = useState<FormularioTipo | null>(null);
 
   if (!paciente) {
     return (
@@ -74,9 +82,22 @@ export default function PacienteDetalle() {
   }
 
   const sexoLabel = paciente.sexo === "femenino" ? "Femenino" : "Masculino";
+  const initials = `${paciente.nombre.charAt(0)}${paciente.apellidoPaterno.charAt(0)}`;
+  const fullName = `${paciente.nombre} ${paciente.apellidoPaterno}${
+    paciente.apellidoMaterno ? ` ${paciente.apellidoMaterno}` : ""
+  }`;
+  const idText = paciente.identificacion
+    ? `${TIPO_ID_LABEL[paciente.identificacion.tipo]}: ${paciente.identificacion.numero}`
+    : null;
+  const tutorText = paciente.tutorPrincipal
+    ? `${paciente.tutorPrincipal}${paciente.tutorParentesco ? ` (${paciente.tutorParentesco})` : ""}`
+    : null;
 
   return (
     <div className="flex min-h-[calc(100dvh-9rem)] flex-col gap-6">
+      {/* El cronómetro se teletransporta al header mientras el expediente esté montado. */}
+      <HeaderConsultationTimer />
+
       <Link
         to="/admin/pacientes"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
@@ -85,77 +106,96 @@ export default function PacienteDetalle() {
         Volver a pacientes
       </Link>
 
-      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-soft md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-navy/10 to-leaf/10 font-display text-2xl font-semibold text-navy">
-            {paciente.nombre.charAt(0)}
-            {paciente.apellidoPaterno.charAt(0)}
-          </div>
-          <div className="min-w-0">
-            <h1 className="font-display text-2xl font-semibold text-navy">
-              {paciente.nombre} {paciente.apellidoPaterno}{" "}
-              {paciente.apellidoMaterno ?? ""}
-            </h1>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-              <span>{formatearEdad(paciente.fechaNacimiento)}</span>
-              <span>·</span>
-              <span>{sexoLabel}</span>
-              <span>·</span>
-              <span className="capitalize">
-                Nacimiento{" "}
-                {format(new Date(paciente.fechaNacimiento), "dd MMM yyyy", {
+      <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          {/* Datos del paciente */}
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-navy/15 bg-gradient-to-br from-navy/10 to-leaf/10 font-display text-lg font-semibold text-navy">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-display text-2xl font-semibold leading-tight text-navy">
+                {fullName}
+              </h1>
+              <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Calendar size={14} strokeWidth={1.75} />
+                Nacimiento:{" "}
+                {format(new Date(paciente.fechaNacimiento), "dd/MM/yyyy", {
                   locale: es,
                 })}
-              </span>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-              <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                <Phone size={12} strokeWidth={1.75} />
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <Badge variant="navy">{formatearEdad(paciente.fechaNacimiento)}</Badge>
+                <span className="text-sm text-muted-foreground">{sexoLabel}</span>
+                {idText ? (
+                  <span className="font-mono text-sm text-muted-foreground">
+                    · {idText}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground">
                 <a
                   href={`tel:${paciente.telefonoTutor.replace(/\s/g, "")}`}
-                  className="text-navy hover:underline"
+                  className="inline-flex items-center gap-1.5 hover:text-navy"
                 >
+                  <Phone size={13} strokeWidth={1.75} />
                   {paciente.telefonoTutor}
                 </a>
-              </span>
-              {paciente.email ? (
-                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
-                  <Mail size={12} strokeWidth={1.75} />
+                {paciente.email ? (
                   <a
                     href={`mailto:${paciente.email}`}
-                    className="text-navy hover:underline"
+                    className="inline-flex items-center gap-1.5 hover:text-navy"
                   >
+                    <Mail size={13} strokeWidth={1.75} />
                     {paciente.email}
                   </a>
-                </span>
-              ) : null}
-              <span className="text-muted-foreground">
-                Tutor: {paciente.tutorPrincipal}
-              </span>
-            </div>
-            {paciente.diagnosticosActivos.length > 0 ? (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {paciente.diagnosticosActivos.map((d) => (
-                  <Badge key={d} variant="leaf">
-                    {d}
-                  </Badge>
-                ))}
+                ) : null}
+                {paciente.direccion ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin size={13} strokeWidth={1.75} />
+                    {paciente.direccion}
+                  </span>
+                ) : null}
+                {tutorText ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <User size={13} strokeWidth={1.75} />
+                    Responsable: {tutorText}
+                  </span>
+                ) : null}
               </div>
-            ) : null}
+              {paciente.diagnosticosActivos.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {paciente.diagnosticosActivos.map((d) => (
+                    <Badge key={d} variant="leaf">
+                      {d}
+                    </Badge>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
-        </div>
 
-        <div className="flex shrink-0 flex-col items-start gap-2 md:items-end">
-          <ConsultationTimer onTerminar={() => setShowNewConsulta(true)} />
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setShowEdit(true)}>
+          {/* Acciones del expediente */}
+          <div className="flex flex-wrap items-center gap-2 lg:max-w-[600px] lg:justify-end">
+            <Button variant="outline" size="sm" onClick={() => setShowOriginal(true)}>
+              <FileText size={14} strokeWidth={1.75} />
+              Ver expediente original
+            </Button>
+            <SincronizarExpedienteButton paciente={paciente} />
+            <LlenarFormularioButton
+              paciente={paciente}
+              preferred={preferredForm}
+              onConsumePreferred={() => setPreferredForm(null)}
+            />
+            <Button variant="outline" size="sm" onClick={() => setShowEdit(true)}>
               <Pencil size={14} strokeWidth={1.75} />
               Editar
             </Button>
-            <Button onClick={() => setShowNewConsulta(true)}>
-              <Plus size={14} strokeWidth={1.75} />
-              Nueva consulta
-            </Button>
+            <PacienteAccionesMenu
+              paciente={paciente}
+              onReactivate={setPreferredForm}
+              onVerOriginal={() => setShowOriginal(true)}
+            />
           </div>
         </div>
       </div>
@@ -230,6 +270,12 @@ export default function PacienteDetalle() {
         pacienteId={paciente.id}
         open={showEdit}
         onClose={() => setShowEdit(false)}
+      />
+
+      <ExpedienteOriginalModal
+        pacienteId={paciente.id}
+        open={showOriginal}
+        onClose={() => setShowOriginal(false)}
       />
 
       <ConsultaFormModal

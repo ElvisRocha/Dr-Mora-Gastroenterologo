@@ -109,7 +109,7 @@ export default function PacienteDetalle() {
       <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           {/* Datos del paciente */}
-          <div className="flex items-start gap-4">
+          <div className="flex min-w-0 flex-1 items-start gap-4">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-2 border-navy/15 bg-gradient-to-br from-navy/10 to-leaf/10 font-display text-lg font-semibold text-navy">
               {initials}
             </div>
@@ -175,8 +175,9 @@ export default function PacienteDetalle() {
             </div>
           </div>
 
-          {/* Acciones del expediente */}
-          <div className="flex flex-wrap items-center gap-2 lg:max-w-[600px] lg:justify-end">
+          {/* Acciones del expediente: una sola línea (scroll horizontal solo si
+              no caben; invisible en pantallas anchas). */}
+          <div className="flex shrink-0 items-center gap-2 overflow-x-auto pb-0.5 [&>*]:shrink-0 lg:justify-end">
             <Button variant="outline" size="sm" onClick={() => setShowOriginal(true)}>
               <FileText size={14} strokeWidth={1.75} />
               Ver expediente original

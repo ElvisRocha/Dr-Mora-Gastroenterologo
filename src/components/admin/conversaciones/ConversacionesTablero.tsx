@@ -44,7 +44,7 @@ export function ConversacionesTablero({
 }: {
   conversaciones: ConversacionMock[];
   mensajes: MensajeMock[];
-  onSelect: (id: string) => void;
+  onSelect: (id: string, categoria: CategoriaTablero) => void;
 }) {
   const ultimoPorConv = useMemo(() => {
     const map = new Map<string, MensajeMock>();
@@ -98,7 +98,7 @@ function TableroColumna({
   cat: (typeof CATEGORIAS_TABLERO)[number];
   items: ConversacionMock[];
   ultimoPorConv: Map<string, MensajeMock>;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, categoria: CategoriaTablero) => void;
 }) {
   const [visible, setVisible] = useState(PAGE);
   const shown = items.slice(0, visible);
@@ -133,7 +133,7 @@ function TableroColumna({
                 <button
                   key={c.id}
                   type="button"
-                  onClick={() => onSelect(c.id)}
+                  onClick={() => onSelect(c.id, cat.key)}
                   className="relative flex w-full items-start gap-2.5 overflow-hidden rounded-lg border border-border bg-card p-2.5 text-left shadow-soft transition-all hover:border-navy/30 hover:shadow-elevated"
                 >
                   <span

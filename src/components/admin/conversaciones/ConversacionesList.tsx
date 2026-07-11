@@ -1,14 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Pin, PauseCircle, ChevronDown } from "lucide-react";
+import { Search, Pin, PauseCircle, ChevronDown, ArrowLeft } from "lucide-react";
 import { formatDistanceToNowStrict } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/cn";
 import { CanalIcon } from "./CanalIcon";
 import {
+  CATEGORIAS_TABLERO,
   formatTelefono,
+  type CategoriaTablero,
   type ConversacionMock,
   type MensajeMock,
 } from "@/lib/data/conversaciones";
+
+// Color del chip que indica la categoría activa (viene del tablero).
+const CHIP_TONE: Record<string, string> = {
+  navy: "border-navy/30 bg-navy/10 text-navy",
+  leaf: "border-leaf/40 bg-leaf/10 text-leaf",
+  teal: "border-teal/40 bg-teal/10 text-teal",
+  amber: "border-amber/40 bg-amber/10 text-amber",
+  coral: "border-coral/40 bg-coral/10 text-coral",
+  neutral: "border-border bg-muted text-muted-foreground",
+};
 
 type EstadoFilter = "todas" | "no_leidas" | "sin_responder";
 
@@ -28,12 +40,21 @@ export function ConversacionesList({
   mensajes,
   selectedId,
   onSelect,
+  categoria = null,
+  onExitCategoria,
 }: {
   conversaciones: ConversacionMock[];
   mensajes: MensajeMock[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  /** Categoría del tablero cuando la lista está acotada a una columna. */
+  categoria?: CategoriaTablero | null;
+  /** Volver al tablero (limpia la categoría activa). */
+  onExitCategoria?: () => void;
 }) {
+  const catConfig = categoria
+    ? CATEGORIAS_TABLERO.find((c) => c.key === categoria)
+    : null;
   const [q, setQ] = useState("");
   const [estado, setEstado] = useState<EstadoFilter>("todas");
   const PAGE = 20;
@@ -103,6 +124,33 @@ export function ConversacionesList({
             className="w-full rounded-full border border-border bg-muted/40 py-2 pl-9 pr-3 text-sm outline-none transition-colors focus:border-navy/40 focus:bg-card"
           />
         </div>
+
+        {/* Indicador de categoría (al entrar desde una columna del tablero) +
+            botón de volver al tablero, igual que el consultorio de referencia. */}
+        {catConfig ? (
+          <div className="mt-2.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onExitCategoria}
+              aria-label="Volver al tablero"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground transition-colors hover:bg-muted"
+            >
+              <ArrowLeft size={13} strokeWidth={2} />
+            </button>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                CHIP_TONE[catConfig.tono],
+              )}
+            >
+              {catConfig.label}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              {conversaciones.length} chat{conversaciones.length === 1 ? "" : "s"}
+            </span>
+          </div>
+        ) : null}
+
         <div className="mt-2.5 inline-flex w-full items-center rounded-full border border-border bg-muted/40 p-0.5">
           {ESTADO_TABS.map((t) => (
             <button

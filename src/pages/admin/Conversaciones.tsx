@@ -7,6 +7,7 @@ import { ConversacionesList } from "@/components/admin/conversaciones/Conversaci
 import { ConversacionThread } from "@/components/admin/conversaciones/ConversacionThread";
 import { PacienteFichaPanel } from "@/components/admin/conversaciones/PacienteFichaPanel";
 import { ConversacionesTablero } from "@/components/admin/conversaciones/ConversacionesTablero";
+import type { CategoriaTablero } from "@/lib/data/conversaciones";
 
 type Vista = "bandeja" | "tablero";
 
@@ -35,6 +36,8 @@ export default function Conversaciones() {
 
   const [vista, setVista] = useState<Vista>("bandeja");
   const [selectedId, setSelectedId] = useState<string | null>(initialId);
+  const [categoriaActiva, setCategoriaActiva] =
+    useState<CategoriaTablero | null>(null);
   const [fichaOpen, setFichaOpen] = useState(false);
 
   const selected = conversaciones.find((c) => c.id === selectedId) ?? null;
@@ -43,10 +46,25 @@ export default function Conversaciones() {
 
   const totalNoLeidos = conversaciones.reduce((a, c) => a + c.noLeidos, 0);
 
-  const handleSelect = (id: string) => {
+  // Cuando se entra desde una columna del tablero, la lista se acota a esa
+  // categoría (se muestra el chip + botón de volver al tablero).
+  const listConversaciones = categoriaActiva
+    ? conversaciones.filter((c) => c.categoria === categoriaActiva)
+    : conversaciones;
+
+  // Desde el tablero llega la categoría; desde la lista normal no (undefined),
+  // por lo que al navegar dentro de la columna se conserva la categoría activa.
+  const handleSelect = (id: string, categoria?: CategoriaTablero) => {
     setSelectedId(id);
     setVista("bandeja");
+    if (categoria !== undefined) setCategoriaActiva(categoria);
     marcarConversacionLeida(id);
+  };
+
+  const exitCategoria = () => {
+    setCategoriaActiva(null);
+    setSelectedId(null);
+    setVista("tablero");
   };
 
   const clearSelection = () => {
@@ -81,7 +99,10 @@ export default function Conversaciones() {
             <button
               key={v.key}
               type="button"
-              onClick={() => setVista(v.key)}
+              onClick={() => {
+                setVista(v.key);
+                setCategoriaActiva(null);
+              }}
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all",
                 vista === v.key
@@ -114,10 +135,12 @@ export default function Conversaciones() {
             )}
           >
             <ConversacionesList
-              conversaciones={conversaciones}
+              conversaciones={listConversaciones}
               mensajes={mensajes}
               selectedId={selectedId}
               onSelect={handleSelect}
+              categoria={categoriaActiva}
+              onExitCategoria={exitCategoria}
             />
           </div>
 

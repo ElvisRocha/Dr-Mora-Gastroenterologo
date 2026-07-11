@@ -11,7 +11,9 @@ import {
   Image as ImageIcon,
   Microscope,
   Paperclip,
+  Pencil,
   Save,
+  ScanLine,
   Stethoscope,
   Trash2,
   Upload,
@@ -28,7 +30,9 @@ import {
   emptyEndoscopia,
   emptyHabitosConsulta,
   serviciosMock,
+  MAX_IMAGENES_ENDOSCOPIA,
   type ArchivoMock,
+  type ArchivoTipo,
   type ConsultaMock,
   type EndoscopiaMock,
   type HabitoEntry,
@@ -46,6 +50,8 @@ import {
 } from "@/store/expedienteStore";
 import { useLang } from "@/contexts/LanguageContext";
 import { ChipsInput, MedicamentosEditor } from "./EditarPacienteModal";
+import { UploadMenu } from "./expediente/UploadMenu";
+import { DrawingCanvas } from "./expediente/DrawingCanvas";
 
 // ─── Config ──────────────────────────────────────────────────────────────
 const TIPOS: {
@@ -104,6 +110,7 @@ type ArchivoStaged = {
   tamanoBytes: number;
   data: string;
   subidoEn: string;
+  tipo: ArchivoTipo;
 };
 
 type FormState = {
@@ -263,6 +270,43 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+// Aceptamos hasta 10 MB de origen y recomprimimos para que el demo persista en
+// localStorage sin llenar la cuota.
+const SOURCE_MAX_BYTES = 10 * 1024 * 1024;
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+async function downscaleImage(
+  file: File,
+  maxDim = 1400,
+  quality = 0.82,
+): Promise<{ data: string; bytes: number }> {
+  const src = await fileToBase64(file);
+  const img = await loadImage(src);
+  let w = img.naturalWidth || img.width;
+  let h = img.naturalHeight || img.height;
+  if (Math.max(w, h) > maxDim) {
+    const s = maxDim / Math.max(w, h);
+    w = Math.round(w * s);
+    h = Math.round(h * s);
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return { data: src, bytes: Math.round((src.length * 3) / 4) };
+  ctx.drawImage(img, 0, 0, w, h);
+  const data = canvas.toDataURL("image/jpeg", quality);
+  return { data, bytes: Math.round((data.length * 3) / 4) };
+}
+
 const habitoHasData = (h: HabitosConsultaMock) =>
   Object.values(h).some((e) => e.tiene !== null || e.notas.trim() !== "");
 
@@ -283,7 +327,14 @@ export function ConsultaFormModal({
   const { addConsulta, updateConsulta } = useConsultas(pacienteId);
   const store = useExpedienteStore();
   const [form, setForm] = useState<FormState>(emptyForm);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const endoInputRef = useRef<HTMLInputElement>(null);
+  const dibujoInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
+  // Imagen abierta en el lienzo de dibujo; null = cerrado.
+  const [drawing, setDrawing] = useState<{
+    image: string;
+    editId: string | null;
+  } | null>(null);
 
   const isEdit = !!consulta;
 
@@ -299,6 +350,7 @@ export function ConsultaFormModal({
           tamanoBytes: a.tamanoBytes,
           data: a.data,
           subidoEn: a.subidoEn,
+          tipo: a.tipo ?? "documento",
         }));
       setForm(fromConsulta(consulta, archivos));
     } else {
@@ -343,17 +395,26 @@ export function ConsultaFormModal({
       endoscopia: { ...prev.endoscopia, [key]: value },
     }));
 
-  const handleFiles = async (files: FileList | null) => {
+  const addStaged = (items: ArchivoStaged[]) => {
+    if (items.length)
+      setForm((prev) => ({ ...prev, archivos: [...prev.archivos, ...items] }));
+  };
+
+  const stageId = () =>
+    `arc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  // Documentos (PDF/imágenes): se guardan tal cual, sujetos al límite del store.
+  const stageDocumentos = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const remaining = MAX_FILES_PER_CONSULTA - form.archivos.length;
+    const count = form.archivos.filter((a) => a.tipo === "documento").length;
+    const remaining = MAX_FILES_PER_CONSULTA - count;
     if (remaining <= 0) {
-      toast.error(`Solo se permiten ${MAX_FILES_PER_CONSULTA} archivos por consulta.`);
+      toast.error(`Solo se permiten ${MAX_FILES_PER_CONSULTA} documentos por consulta.`);
       return;
     }
     const list = Array.from(files).slice(0, remaining);
-    if (files.length > remaining) {
-      toast.warning(`Solo se aceptaron ${remaining} de ${files.length} archivos por el límite.`);
-    }
+    if (files.length > remaining)
+      toast.warning(`Solo se aceptaron ${remaining} de ${files.length} documentos.`);
     const nuevos: ArchivoStaged[] = [];
     for (const file of list) {
       if (file.size > MAX_FILE_BYTES) {
@@ -361,23 +422,111 @@ export function ConsultaFormModal({
         continue;
       }
       try {
-        const data = await fileToBase64(file);
         nuevos.push({
-          id: `arc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          id: stageId(),
           nombre: file.name,
           mimeType: file.type || "application/octet-stream",
           tamanoBytes: file.size,
-          data,
+          data: await fileToBase64(file),
           subidoEn: new Date().toISOString(),
+          tipo: "documento",
         });
       } catch {
         toast.error(`No se pudo leer ${file.name}.`);
       }
     }
-    if (nuevos.length) {
-      setForm((prev) => ({ ...prev, archivos: [...prev.archivos, ...nuevos] }));
+    addStaged(nuevos);
+    if (docInputRef.current) docInputRef.current.value = "";
+  };
+
+  // Imágenes de endoscopía: galería de hasta 5, recomprimidas para el demo.
+  const stageEndoscopia = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const count = form.archivos.filter((a) => a.tipo === "endoscopia").length;
+    const remaining = MAX_IMAGENES_ENDOSCOPIA - count;
+    if (remaining <= 0) {
+      toast.error(`Máximo ${MAX_IMAGENES_ENDOSCOPIA} imágenes de endoscopía.`);
+      return;
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
+    const imgs = Array.from(files)
+      .filter((f) => f.type.startsWith("image/"))
+      .slice(0, remaining);
+    if (!imgs.length) {
+      toast.error("Selecciona imágenes (JPG, PNG o WEBP).");
+      return;
+    }
+    const nuevos: ArchivoStaged[] = [];
+    for (const file of imgs) {
+      if (file.size > SOURCE_MAX_BYTES) {
+        toast.error(`${file.name} excede ${formatBytes(SOURCE_MAX_BYTES)}.`);
+        continue;
+      }
+      try {
+        const comp = await downscaleImage(file);
+        nuevos.push({
+          id: stageId(),
+          nombre: file.name,
+          mimeType: "image/jpeg",
+          tamanoBytes: comp.bytes,
+          data: comp.data,
+          subidoEn: new Date().toISOString(),
+          tipo: "endoscopia",
+        });
+      } catch {
+        toast.error(`No se pudo procesar ${file.name}.`);
+      }
+    }
+    addStaged(nuevos);
+    if (endoInputRef.current) endoInputRef.current.value = "";
+  };
+
+  // Imagen para dibujar: se recomprime y se abre el lienzo de anotación.
+  const pickDibujo = async (files: FileList | null) => {
+    const file = files?.[0];
+    if (dibujoInputRef.current) dibujoInputRef.current.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecciona una imagen (JPG, PNG o WEBP).");
+      return;
+    }
+    if (file.size > SOURCE_MAX_BYTES) {
+      toast.error(`La imagen excede ${formatBytes(SOURCE_MAX_BYTES)}.`);
+      return;
+    }
+    try {
+      const comp = await downscaleImage(file, 1600, 0.9);
+      setDrawing({ image: comp.data, editId: null });
+    } catch {
+      toast.error("No se pudo procesar la imagen.");
+    }
+  };
+
+  const saveDrawing = (dataUrl: string) => {
+    const bytes = Math.round((dataUrl.length * 3) / 4);
+    setForm((prev) => {
+      if (drawing?.editId) {
+        return {
+          ...prev,
+          archivos: prev.archivos.map((a) =>
+            a.id === drawing.editId
+              ? { ...a, data: dataUrl, tamanoBytes: bytes, subidoEn: new Date().toISOString() }
+              : a,
+          ),
+        };
+      }
+      const n = prev.archivos.filter((a) => a.tipo === "dibujo").length + 1;
+      const nuevo: ArchivoStaged = {
+        id: stageId(),
+        nombre: `anotacion-${n}.jpg`,
+        mimeType: "image/jpeg",
+        tamanoBytes: bytes,
+        data: dataUrl,
+        subidoEn: new Date().toISOString(),
+        tipo: "dibujo",
+      };
+      return { ...prev, archivos: [...prev.archivos, nuevo] };
+    });
+    setDrawing(null);
   };
 
   const removeArchivoStaged = (id: string) =>
@@ -385,6 +534,10 @@ export function ConsultaFormModal({
       ...prev,
       archivos: prev.archivos.filter((a) => a.id !== id),
     }));
+
+  const endoImgs = form.archivos.filter((a) => a.tipo === "endoscopia");
+  const dibujos = form.archivos.filter((a) => a.tipo === "dibujo");
+  const documentos = form.archivos.filter((a) => a.tipo === "documento");
 
   const handleSave = () => {
     if (!form.motivo.trim()) return;
@@ -532,15 +685,12 @@ export function ConsultaFormModal({
       title={isEdit ? "Editar consulta" : "Nueva consulta"}
       subtitle={subtitle}
       headerActions={
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={form.archivos.length >= MAX_FILES_PER_CONSULTA}
-        >
-          <Upload size={14} strokeWidth={1.75} />
-          Subir archivo
-        </Button>
+        <UploadMenu
+          onEndoscopia={() => endoInputRef.current?.click()}
+          onDibujo={() => dibujoInputRef.current?.click()}
+          onDocumento={() => docInputRef.current?.click()}
+          endoscopiaDisabled={endoImgs.length >= MAX_IMAGENES_ENDOSCOPIA}
+        />
       }
       footer={
         <>
@@ -555,13 +705,36 @@ export function ConsultaFormModal({
       }
     >
       <input
-        ref={fileInputRef}
+        ref={endoInputRef}
+        type="file"
+        multiple
+        className="hidden"
+        accept="image/*"
+        onChange={(e) => stageEndoscopia(e.target.files)}
+      />
+      <input
+        ref={dibujoInputRef}
+        type="file"
+        className="hidden"
+        accept="image/*"
+        onChange={(e) => pickDibujo(e.target.files)}
+      />
+      <input
+        ref={docInputRef}
         type="file"
         multiple
         className="hidden"
         accept="image/*,application/pdf"
-        onChange={(e) => handleFiles(e.target.files)}
+        onChange={(e) => stageDocumentos(e.target.files)}
       />
+
+      {drawing ? (
+        <DrawingCanvas
+          image={drawing.image}
+          onSave={saveDrawing}
+          onClose={() => setDrawing(null)}
+        />
+      ) : null}
 
       <div className="space-y-6">
         {/* Nombre del servicio */}
@@ -954,34 +1127,84 @@ export function ConsultaFormModal({
           </div>
         </CollapsibleSection>
 
-        {/* Archivos adjuntos */}
+        {/* Imágenes de endoscopía */}
+        {endoImgs.length > 0 ? (
+          <div>
+            <div className="flex items-center justify-between">
+              <SectionHeading>
+                <span className="inline-flex items-center gap-2">
+                  <ScanLine size={15} strokeWidth={1.75} className="text-navy" />
+                  Imágenes de endoscopía
+                </span>
+              </SectionHeading>
+              <span className="text-xs text-muted-foreground">
+                {endoImgs.length} de {MAX_IMAGENES_ENDOSCOPIA}
+              </span>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {endoImgs.map((a) => (
+                <ImageTile
+                  key={a.id}
+                  src={a.data}
+                  nombre={a.nombre}
+                  onRemove={() => removeArchivoStaged(a.id)}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Imágenes anotadas (dibujo) */}
+        {dibujos.length > 0 ? (
+          <div>
+            <SectionHeading>
+              <span className="inline-flex items-center gap-2">
+                <Pencil size={15} strokeWidth={1.75} className="text-navy" />
+                Imágenes anotadas
+              </span>
+            </SectionHeading>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {dibujos.map((a) => (
+                <ImageTile
+                  key={a.id}
+                  src={a.data}
+                  nombre={a.nombre}
+                  onRemove={() => removeArchivoStaged(a.id)}
+                  onEdit={() => setDrawing({ image: a.data, editId: a.id })}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Documentos adjuntos */}
         <div>
           <div className="flex items-center justify-between">
             <SectionHeading>
               <span className="inline-flex items-center gap-2">
                 <Paperclip size={15} strokeWidth={1.75} className="text-navy" />
-                Archivos adjuntos
+                Documentos adjuntos
               </span>
             </SectionHeading>
             <span className="text-xs text-muted-foreground">
-              {form.archivos.length} de {MAX_FILES_PER_CONSULTA} · máx{" "}
+              {documentos.length} de {MAX_FILES_PER_CONSULTA} · máx{" "}
               {formatBytes(MAX_FILE_BYTES)}
             </span>
           </div>
-          {form.archivos.length === 0 ? (
+          {documentos.length === 0 ? (
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => docInputRef.current?.click()}
               className="mt-3 flex w-full flex-col items-center gap-1 rounded-2xl border border-dashed border-border bg-muted/20 px-4 py-6 text-center transition-colors hover:border-navy/30 hover:bg-muted/40"
             >
               <Upload size={20} strokeWidth={1.5} className="text-muted-foreground/70" />
               <span className="text-xs text-muted-foreground">
-                Sube resultados, imágenes o reportes (PDF o imagen)
+                Sube reportes o documentos (PDF o imagen)
               </span>
             </button>
           ) : (
             <ul className="mt-3 space-y-2">
-              {form.archivos.map((a) => (
+              {documentos.map((a) => (
                 <li
                   key={a.id}
                   className="flex items-center gap-3 rounded-xl border border-border bg-card p-3"
@@ -1031,6 +1254,46 @@ export function ConsultaFormModal({
         </div>
       </div>
     </SidePanel>
+  );
+}
+
+function ImageTile({
+  src,
+  nombre,
+  onRemove,
+  onEdit,
+}: {
+  src: string;
+  nombre: string;
+  onRemove: () => void;
+  onEdit?: () => void;
+}) {
+  return (
+    <div className="group relative overflow-hidden rounded-xl border border-border bg-card">
+      <img src={src} alt={nombre} className="aspect-square w-full object-cover" />
+      <div className="absolute right-1.5 top-1.5 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+        {onEdit ? (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-card/90 text-navy shadow-soft hover:bg-card"
+            aria-label={`Editar ${nombre}`}
+            title="Editar anotación"
+          >
+            <Pencil size={13} strokeWidth={1.75} />
+          </button>
+        ) : null}
+        <button
+          type="button"
+          onClick={onRemove}
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-card/90 text-coral shadow-soft hover:bg-card"
+          aria-label={`Eliminar ${nombre}`}
+          title="Eliminar"
+        >
+          <Trash2 size={13} strokeWidth={1.75} />
+        </button>
+      </div>
+    </div>
   );
 }
 

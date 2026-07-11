@@ -1030,6 +1030,11 @@ export const emptyEndoscopia = (): EndoscopiaMock => ({
   sedacionTolerancia: "",
 });
 
+/** Categoría del adjunto según el menú "Subir archivo". */
+export type ArchivoTipo = "documento" | "endoscopia" | "dibujo";
+
+export const MAX_IMAGENES_ENDOSCOPIA = 5;
+
 export type ArchivoMock = {
   id: string;
   consultaId: string;
@@ -1039,6 +1044,8 @@ export type ArchivoMock = {
   /** Data URL (base64). En migración a Supabase reemplazar por `path` + signed URL. */
   data: string;
   subidoEn: string;
+  /** Tipo de adjunto: documento (por defecto), imagen de endoscopía o imagen anotada. */
+  tipo?: ArchivoTipo;
 };
 
 export type NotaBitacoraMock = {

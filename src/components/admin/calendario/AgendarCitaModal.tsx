@@ -29,11 +29,13 @@ export function AgendarCitaModal({
   onClose,
   defaultDate,
   defaultHour,
+  defaultMinute,
 }: {
   open: boolean;
   onClose: () => void;
   defaultDate?: Date;
   defaultHour?: number;
+  defaultMinute?: number;
 }) {
   const { servicios, addCita, addNotificacion } = useClinic();
   const serviciosActivos = servicios.filter((s) => s.activo);
@@ -55,12 +57,16 @@ export function AgendarCitaModal({
     const { hour12: h12, ampm: ap } = from24h(h);
     setHour12(h12);
     setAmpm(ap);
-    setMinute("00");
+    setMinute(
+      defaultMinute != null
+        ? String(defaultMinute).padStart(2, "0")
+        : "00",
+    );
     setPacienteId("");
     setServicioId("");
     setDuracion("30");
     setNotas("");
-  }, [open, defaultDate, defaultHour]);
+  }, [open, defaultDate, defaultHour, defaultMinute]);
 
   const servicio = useMemo(
     () => serviciosActivos.find((s) => s.id === servicioId),

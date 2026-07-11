@@ -487,7 +487,7 @@ export const pacientesMock: PacienteMock[] = [
 // para los próximos ~3 meses (y las últimas semanas), con estados variados.
 export const citasMock: CitaMock[] = [
   ...citasBase,
-  ...generarCitas(pacientesMock),
+  ...generarCitas(pacientesMock, citasBase),
 ];
 
 export function pacientePorId(id: string) {

@@ -62,7 +62,13 @@ function pickEstado(
   return "cancelada";
 }
 
-export function generarCitas(pacientes: { id: string }[]): CitaMock[] {
+const dayKey = (d: Date) =>
+  `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+
+export function generarCitas(
+  pacientes: { id: string }[],
+  ocupadas: { fechaHora: string; duracionMin: number }[] = [],
+): CitaMock[] {
   if (pacientes.length === 0) return [];
   const rnd = mulberry32(0x0c17a5);
   const citas: CitaMock[] = [];
@@ -70,6 +76,16 @@ export function generarCitas(pacientes: { id: string }[]): CitaMock[] {
   const midnight = new Date();
   midnight.setHours(0, 0, 0, 0);
   const todayMs = midnight.getTime();
+
+  // Espacios (celdas de 15 min) ya ocupados por citas ancla, para no encimarnos.
+  const ocupado = new Set<string>();
+  for (const c of ocupadas) {
+    const d = new Date(c.fechaHora);
+    const startMin = d.getHours() * 60 + d.getMinutes();
+    for (let m = startMin; m < startMin + c.duracionMin; m += 15) {
+      ocupado.add(`${dayKey(d)}#${m}`);
+    }
+  }
 
   const pickServicio = () => {
     let r = rnd() * PESO_TOTAL;
@@ -99,6 +115,19 @@ export function generarCitas(pacientes: { id: string }[]): CitaMock[] {
           if (cursor + dur > we) dur = 30;
           if (cursor + dur > we) {
             cursor += 30;
+            continue;
+          }
+          // No pisar un espacio ocupado por una cita ancla.
+          const dk = dayKey(day);
+          let choca = false;
+          for (let m = cursor; m < cursor + dur; m += 15) {
+            if (ocupado.has(`${dk}#${m}`)) {
+              choca = true;
+              break;
+            }
+          }
+          if (choca) {
+            cursor += 15;
             continue;
           }
           const dt = new Date(day);

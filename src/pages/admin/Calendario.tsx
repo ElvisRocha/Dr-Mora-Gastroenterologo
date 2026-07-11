@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CalendarPlus, ChevronLeft, ChevronRight, Clock, Lock } from "lucide-react";
+import { CalendarPlus, ChevronLeft, ChevronRight, Lock, Plus } from "lucide-react";
 import {
   addDays,
   addMinutes,
@@ -37,16 +37,43 @@ import { BloqueoModal } from "@/components/admin/calendario/BloqueoModal";
 
 type View = "dia" | "semana" | "mes";
 
-const HOURS = Array.from({ length: 11 }, (_, i) => i + 9); // 9:00 - 19:00
+// ── Cuadrícula de 15 minutos (7:00 – 19:45), como el consultorio de referencia.
+const FIRST_HOUR = 7;
+const LAST_HOUR = 19;
+const SLOT_MINUTES = 15;
+const SLOTS_PER_HOUR = 60 / SLOT_MINUTES;
+const SLOT_HEIGHT_REM = 1.5; // h-6 (24px) por franja de 15 min
+const SLOT_COUNT = (LAST_HOUR - FIRST_HOUR + 1) * SLOTS_PER_HOUR;
+const COL_HEIGHT_REM = SLOT_COUNT * SLOT_HEIGHT_REM;
+
+type Slot = { index: number; hour: number; minute: number };
+const SLOTS: Slot[] = Array.from({ length: SLOT_COUNT }, (_, i) => {
+  const total = FIRST_HOUR * 60 + i * SLOT_MINUTES;
+  return { index: i, hour: Math.floor(total / 60), minute: total % 60 };
+});
+const HOUR_LABELS = Array.from(
+  { length: LAST_HOUR - FIRST_HOUR + 1 },
+  (_, i) => FIRST_HOUR + i,
+);
+
 const WEEK_DAY_LABELS = ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB"];
 
+const CLOSED_STYLE: React.CSSProperties = {
+  backgroundImage:
+    "repeating-linear-gradient(45deg, hsl(215 16% 60% / 0.10) 0, hsl(215 16% 60% / 0.10) 1px, transparent 1px, transparent 6px)",
+};
+
 const ESTADO_STYLE: Record<CitaFull["estado"], string> = {
-  agendada: "bg-navy/10 text-navy border-navy/20",
+  agendada: "bg-navy/10 text-navy border-navy/25",
   confirmada: "bg-leaf/15 text-leaf border-leaf/30",
   realizada: "bg-muted text-muted-foreground border-border",
   cancelada: "bg-coral/12 text-coral border-coral/30 opacity-70",
   no_asistio: "bg-amber/15 text-amber border-amber/30",
 };
+
+// Posición vertical (rem) de un momento del día dentro de la cuadrícula.
+const topRemFor = (hour: number, minute: number) =>
+  (((hour - FIRST_HOUR) * 60 + minute) / SLOT_MINUTES) * SLOT_HEIGHT_REM;
 
 export default function Calendario() {
   const { t } = useLang();
@@ -56,7 +83,11 @@ export default function Calendario() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [now, setNow] = useState(new Date());
   const [agendarOpen, setAgendarOpen] = useState(false);
-  const [agendarSeed, setAgendarSeed] = useState<{ date?: Date; hour?: number }>({});
+  const [agendarSeed, setAgendarSeed] = useState<{
+    date?: Date;
+    hour?: number;
+    minute?: number;
+  }>({});
   const [bloqueoOpen, setBloqueoOpen] = useState(false);
 
   useEffect(() => {
@@ -127,33 +158,26 @@ export default function Calendario() {
         )
       : [];
 
-  const getCitasForDayHour = (day: Date, hour: number) =>
-    citasEnRango.filter((c) => {
-      const dt = new Date(c.fechaHora);
-      return isSameDay(dt, day) && dt.getHours() === hour;
-    });
-
   const citasForDay = (day: Date) =>
     citasEnRango.filter((c) => isSameDay(new Date(c.fechaHora), day));
 
-  // Bloqueo que cubre este día+hora (cualquier solape con la hora).
-  const bloqueoForCell = (day: Date, hour: number): BloqueoMock | undefined => {
-    const cellStart = new Date(day);
-    cellStart.setHours(hour, 0, 0, 0);
-    const cellEnd = new Date(cellStart);
-    cellEnd.setHours(hour + 1, 0, 0, 0);
-    return bloqueos.find((b) => {
+  const bloqueosForDay = (day: Date) => {
+    const ds = new Date(day);
+    ds.setHours(FIRST_HOUR, 0, 0, 0);
+    const de = new Date(day);
+    de.setHours(LAST_HOUR + 1, 0, 0, 0);
+    return bloqueos.filter((b) => {
       const bi = new Date(b.inicio).getTime();
       const bf = new Date(b.fin).getTime();
-      return bi < cellEnd.getTime() && bf > cellStart.getTime();
+      return bi < de.getTime() && bf > ds.getTime();
     });
   };
 
-  const cellCerrado = (day: Date, hour: number) =>
-    !estaAbierto(horarios, day.getDay(), hour * 60);
+  const slotCerrado = (day: Date, slot: Slot) =>
+    !estaAbierto(horarios, day.getDay(), slot.hour * 60 + slot.minute);
 
-  const openAgendar = (date?: Date, hour?: number) => {
-    setAgendarSeed({ date, hour });
+  const openAgendar = (date?: Date, hour?: number, minute?: number) => {
+    setAgendarSeed({ date, hour, minute });
     setAgendarOpen(true);
   };
 
@@ -165,24 +189,8 @@ export default function Calendario() {
     return `${startLabel} - ${format(addMinutes(start, minutes), "h:mm a")}`;
   };
 
-  // Línea "ahora" dentro de la celda de la hora actual.
-  const nowLineFor = (day: Date, hour: number) => {
-    if (!isSameDay(now, day) || now.getHours() !== hour) return null;
-    const pct = (now.getMinutes() / 60) * 100;
-    return (
-      <div
-        className="pointer-events-none absolute inset-x-0 z-10 flex items-center"
-        style={{ top: `${pct}%` }}
-      >
-        <span className="h-2 w-2 shrink-0 -translate-x-1/2 rounded-full bg-coral" />
-        <span className="h-px flex-1 bg-coral" />
-      </div>
-    );
-  };
-
-  // Clic en una cita: abre el expediente. Si la cita está agendada o
-  // confirmada, además inicia la consulta (cronómetro corriendo). Las citas
-  // ya realizadas / canceladas / no asistidas solo se abren para consultar.
+  // Clic en una cita: abre el expediente. Si está agendada o confirmada, además
+  // inicia la consulta (cronómetro). Realizadas/canceladas/no asistidas: ver.
   const openCita = (cita: CitaFull) => {
     const iniciable = cita.estado === "agendada" || cita.estado === "confirmada";
     navigate(
@@ -191,7 +199,12 @@ export default function Calendario() {
     );
   };
 
-  const CitaCard = ({ cita, dense }: { cita: CitaFull; dense?: boolean }) => {
+  // ── Bloque de cita posicionado por hora de inicio + duración ──────────────
+  const CitaBlock = ({ cita }: { cita: CitaFull }) => {
+    const start = new Date(cita.fechaHora);
+    const dur = cita.duracionMin || findDuracion(cita.servicioSlug);
+    const top = topRemFor(start.getHours(), start.getMinutes());
+    const height = (dur / SLOT_MINUTES) * SLOT_HEIGHT_REM;
     const paciente = pacientePorId(cita.pacienteId);
     const src = SOURCE_CONFIG[cita.source];
     return (
@@ -203,44 +216,144 @@ export default function Calendario() {
           if (e.key === "Enter") openCita(cita);
         }}
         className={cn(
-          "group relative block w-full cursor-pointer rounded-md border text-left transition-shadow hover:shadow-sm",
-          dense ? "px-1.5 py-1" : "px-3 py-2",
+          "group absolute left-1 right-1 z-10 cursor-pointer overflow-hidden rounded-md border px-2 py-0.5 text-left transition-shadow hover:z-20 hover:shadow-md",
           ESTADO_STYLE[cita.estado],
         )}
+        style={{ top: `${top}rem`, height: `${height}rem` }}
       >
         <div className="flex items-start justify-between gap-1">
-          <p
-            className={cn(
-              "truncate font-medium leading-tight",
-              dense ? "text-[11px]" : "text-sm",
-            )}
-          >
+          <p className="truncate text-[11px] font-medium leading-tight">
             {servicioNombre(cita.servicioSlug)}
           </p>
           <div className="flex shrink-0 items-center gap-0.5">
-            <src.Icon size={dense ? 11 : 13} className={cn(src.color, "shrink-0")} />
+            <src.Icon size={11} className={cn(src.color, "shrink-0")} />
             <div className="opacity-0 transition-opacity group-hover:opacity-100">
-              <CitaActionsMenu cita={cita} compact={dense} />
+              <CitaActionsMenu cita={cita} compact />
             </div>
           </div>
         </div>
-        <p className={cn("truncate leading-tight", dense ? "text-[11px]" : "text-sm")}>
+        <p className="truncate text-[11px] leading-tight">
           {paciente
             ? `${paciente.nombre} ${paciente.apellidoPaterno}`
             : (cita.pacienteNombre ?? "Sin paciente")}
         </p>
-        <p
-          className={cn(
-            "font-mono leading-tight opacity-80",
-            dense ? "text-[10px]" : "mt-0.5 flex items-center gap-1.5 text-xs",
-          )}
-        >
-          {!dense ? <Clock size={12} className="shrink-0" /> : null}
+        <p className="truncate font-mono text-[10px] leading-tight opacity-80">
           {formatRange(cita)}
         </p>
       </div>
     );
   };
+
+  const BloqueoBlock = ({ bloqueo, day }: { bloqueo: BloqueoMock; day: Date }) => {
+    const ds = new Date(day);
+    ds.setHours(FIRST_HOUR, 0, 0, 0);
+    const de = new Date(day);
+    de.setHours(LAST_HOUR + 1, 0, 0, 0);
+    const s = Math.max(new Date(bloqueo.inicio).getTime(), ds.getTime());
+    const e = Math.min(new Date(bloqueo.fin).getTime(), de.getTime());
+    if (e <= s) return null;
+    const sd = new Date(s);
+    const top = topRemFor(sd.getHours(), sd.getMinutes());
+    const height = ((e - s) / 60000 / SLOT_MINUTES) * SLOT_HEIGHT_REM;
+    return (
+      <div
+        className="absolute left-0.5 right-0.5 z-[6] flex items-start gap-1 overflow-hidden rounded-md border border-dashed border-muted-foreground/30 bg-muted/80 px-2 py-1 text-[10px] text-muted-foreground"
+        style={{ top: `${top}rem`, height: `${height}rem` }}
+        title={bloqueo.motivo}
+      >
+        <Lock size={10} className="mt-0.5 shrink-0" />
+        <span className="truncate font-medium">{BLOQUEO_LABEL[bloqueo.categoria]}</span>
+      </div>
+    );
+  };
+
+  const NowLine = ({ day }: { day: Date }) => {
+    if (!isSameDay(now, day)) return null;
+    const h = now.getHours();
+    if (h < FIRST_HOUR || h > LAST_HOUR) return null;
+    const top = topRemFor(h, now.getMinutes());
+    return (
+      <div
+        className="pointer-events-none absolute inset-x-0 z-30 flex items-center"
+        style={{ top: `${top}rem` }}
+      >
+        <span className="h-2 w-2 shrink-0 -translate-x-1/2 rounded-full bg-coral" />
+        <span className="h-px flex-1 bg-coral" />
+      </div>
+    );
+  };
+
+  // ── Columna de un día: cuadrícula clickeable + overlays ───────────────────
+  const DayColumn = ({ day }: { day: Date }) => {
+    const dayCitas = citasForDay(day);
+    const dayBloqueos = bloqueosForDay(day);
+    return (
+      <div
+        className="relative min-w-0 flex-1 border-r border-border last:border-r-0"
+        style={{ height: `${COL_HEIGHT_REM}rem` }}
+      >
+        {/* Cuadrícula: cada franja de 15 min es un espacio clickeable. */}
+        {SLOTS.map((slot) => {
+          const cerrado = slotCerrado(day, slot);
+          const isHour = slot.minute === 0;
+          return (
+            <button
+              key={slot.index}
+              type="button"
+              disabled={cerrado}
+              onClick={() => openAgendar(day, slot.hour, slot.minute)}
+              className={cn(
+                "group/slot block w-full border-b",
+                isHour ? "border-border/60" : "border-border/25",
+                cerrado ? "cursor-default" : "hover:bg-navy/5",
+              )}
+              style={{
+                height: `${SLOT_HEIGHT_REM}rem`,
+                ...(cerrado ? CLOSED_STYLE : {}),
+              }}
+              aria-label={
+                cerrado
+                  ? "Fuera de horario"
+                  : `Agendar ${slot.hour}:${String(slot.minute).padStart(2, "0")}`
+              }
+            >
+              {!cerrado ? (
+                <Plus
+                  size={12}
+                  className="mx-auto text-navy/50 opacity-0 transition-opacity group-hover/slot:opacity-100"
+                />
+              ) : null}
+            </button>
+          );
+        })}
+
+        <NowLine day={day} />
+        {dayBloqueos.map((b) => (
+          <BloqueoBlock key={b.id} bloqueo={b} day={day} />
+        ))}
+        {dayCitas.map((c) => (
+          <CitaBlock key={c.id} cita={c} />
+        ))}
+      </div>
+    );
+  };
+
+  const TimeGutter = () => (
+    <div
+      className="relative w-14 shrink-0 border-r border-border"
+      style={{ height: `${COL_HEIGHT_REM}rem` }}
+    >
+      {HOUR_LABELS.map((h) => (
+        <div
+          key={h}
+          className="absolute right-2 pt-0.5 font-mono text-[11px] text-muted-foreground"
+          style={{ top: `${topRemFor(h, 0)}rem` }}
+        >
+          {h}:00
+        </div>
+      ))}
+    </div>
+  );
 
   const headerLabel = (() => {
     if (view === "dia") return format(currentDate, "EEEE, dd 'de' MMMM yyyy", { locale: es });
@@ -310,46 +423,30 @@ export default function Calendario() {
       </div>
 
       {view === "dia" ? (
-        <div className="overflow-hidden rounded-2xl border border-border bg-card">
-          {HOURS.map((hour) => {
-            const hourCitas = getCitasForDayHour(currentDate, hour);
-            const bloqueo = bloqueoForCell(currentDate, hour);
-            const cerrado = cellCerrado(currentDate, hour);
-            return (
-              <div key={hour} className="flex min-h-[3.5rem] border-b border-border last:border-0">
-                <div className="flex w-16 shrink-0 items-start justify-end border-r border-border p-2 font-mono text-xs text-muted-foreground">
-                  {`${hour}:00`}
-                </div>
-                <div
-                  className={cn(
-                    "relative flex-1 space-y-1 p-1",
-                    cerrado && "bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,hsl(215_16%_90%/0.4)_6px,hsl(215_16%_90%/0.4)_12px)]",
-                  )}
-                >
-                  {nowLineFor(currentDate, hour)}
-                  {bloqueo ? <BloqueoOverlay bloqueo={bloqueo} /> : null}
-                  {hourCitas.map((cita) => (
-                    <CitaCard key={cita.id} cita={cita} />
-                  ))}
-                  {!bloqueo && hourCitas.length === 0 && !cerrado ? (
-                    <button
-                      type="button"
-                      onClick={() => openAgendar(currentDate, hour)}
-                      className="flex h-full min-h-[3rem] w-full items-center justify-center rounded-md text-xs text-transparent transition-colors hover:bg-navy/5 hover:text-muted-foreground"
-                    >
-                      + Agendar
-                    </button>
-                  ) : null}
-                </div>
+        <div className="overflow-auto rounded-2xl border border-border bg-card">
+          <div className="min-w-[420px]">
+            <div className="sticky top-0 z-20 flex border-b border-border bg-muted/30">
+              <div className="w-14 shrink-0 border-r border-border" />
+              <div className="flex-1 px-2 py-2 text-center">
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {format(currentDate, "EEEE", { locale: es })}
+                </p>
+                <p className={cn("text-base font-bold", isToday(currentDate) ? "text-navy" : "text-foreground")}>
+                  {format(currentDate, "d")}
+                </p>
               </div>
-            );
-          })}
+            </div>
+            <div className="flex">
+              <TimeGutter />
+              <DayColumn day={currentDate} />
+            </div>
+          </div>
         </div>
       ) : view === "semana" ? (
-        <div className="overflow-x-auto rounded-2xl border border-border bg-card">
-          <div className="min-w-[720px]">
-            <div className="flex border-b border-border bg-muted/30">
-              <div className="w-16 shrink-0 border-r border-border" />
+        <div className="overflow-auto rounded-2xl border border-border bg-card">
+          <div className="min-w-[900px]">
+            <div className="sticky top-0 z-20 flex border-b border-border bg-muted/30">
+              <div className="w-14 shrink-0 border-r border-border" />
               {weekDays.map((day) => {
                 const today = isToday(day);
                 return (
@@ -370,33 +467,12 @@ export default function Calendario() {
                 );
               })}
             </div>
-            {HOURS.map((hour) => (
-              <div key={hour} className="flex min-h-[3.5rem] border-b border-border last:border-0">
-                <div className="flex w-16 shrink-0 items-start justify-end border-r border-border p-2 font-mono text-xs text-muted-foreground">
-                  {`${hour}:00`}
-                </div>
-                {weekDays.map((day) => {
-                  const cellCitas = getCitasForDayHour(day, hour);
-                  const bloqueo = bloqueoForCell(day, hour);
-                  const cerrado = cellCerrado(day, hour);
-                  return (
-                    <div
-                      key={day.toISOString()}
-                      className={cn(
-                        "relative min-w-0 flex-1 space-y-1 border-r border-border p-1 last:border-r-0",
-                        cerrado && "bg-[repeating-linear-gradient(45deg,transparent,transparent_6px,hsl(215_16%_90%/0.4)_6px,hsl(215_16%_90%/0.4)_12px)]",
-                      )}
-                    >
-                      {nowLineFor(day, hour)}
-                      {bloqueo ? <BloqueoOverlay bloqueo={bloqueo} dense /> : null}
-                      {cellCitas.map((cita) => (
-                        <CitaCard key={cita.id} cita={cita} dense />
-                      ))}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+            <div className="flex">
+              <TimeGutter />
+              {weekDays.map((day) => (
+                <DayColumn key={day.toISOString()} day={day} />
+              ))}
+            </div>
           </div>
         </div>
       ) : (
@@ -482,23 +558,9 @@ export default function Calendario() {
         onClose={() => setAgendarOpen(false)}
         defaultDate={agendarSeed.date}
         defaultHour={agendarSeed.hour}
+        defaultMinute={agendarSeed.minute}
       />
       <BloqueoModal open={bloqueoOpen} onClose={() => setBloqueoOpen(false)} defaultDate={currentDate} />
-    </div>
-  );
-}
-
-function BloqueoOverlay({ bloqueo, dense }: { bloqueo: BloqueoMock; dense?: boolean }) {
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-1.5 rounded-md border border-dashed border-muted-foreground/30 bg-muted/60 text-muted-foreground",
-        dense ? "px-1.5 py-1 text-[10px]" : "px-3 py-2 text-xs",
-      )}
-      title={bloqueo.motivo}
-    >
-      <Lock size={dense ? 11 : 13} className="shrink-0" />
-      <span className="truncate">{BLOQUEO_LABEL[bloqueo.categoria]}</span>
     </div>
   );
 }

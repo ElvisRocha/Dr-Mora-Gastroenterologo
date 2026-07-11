@@ -1,13 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Calendar, CalendarPlus, Check, Search, User } from "lucide-react";
+import {
+  Calendar,
+  CalendarPlus,
+  Check,
+  Search,
+  User,
+  UserPlus,
+} from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { SidePanel } from "@/components/ui/SidePanel";
 import { Button } from "@/components/ui/Button";
 import { Field, Input, Select, Textarea } from "@/components/ui/Input";
 import { useClinic, type CitaFull } from "@/store/clinicStore";
-import { pacientesMock, TIPO_ID_LABEL, type PacienteMock } from "@/lib/mock";
+import { useExpedienteStore } from "@/store/expedienteStore";
+import { TIPO_ID_LABEL, type PacienteMock } from "@/lib/mock";
 import { cn } from "@/lib/cn";
+import { InlineNuevoPacienteForm } from "./InlineNuevoPacienteForm";
 
 const MINUTOS = ["00", "15", "30", "45"];
 const HORAS12 = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -38,9 +47,11 @@ export function AgendarCitaModal({
   defaultMinute?: number;
 }) {
   const { servicios, addCita, addNotificacion } = useClinic();
+  const { getPaciente } = useExpedienteStore();
   const serviciosActivos = servicios.filter((s) => s.activo);
 
   const [pacienteId, setPacienteId] = useState("");
+  const [creandoPaciente, setCreandoPaciente] = useState(false);
   const [servicioId, setServicioId] = useState("");
   const [fecha, setFecha] = useState("");
   const [hour12, setHour12] = useState(9);
@@ -63,6 +74,7 @@ export function AgendarCitaModal({
         : "00",
     );
     setPacienteId("");
+    setCreandoPaciente(false);
     setServicioId("");
     setDuracion("30");
     setNotas("");
@@ -85,7 +97,7 @@ export function AgendarCitaModal({
       toast.error("Completa paciente, servicio y fecha");
       return;
     }
-    const paciente = pacientesMock.find((p) => p.id === pacienteId);
+    const paciente = getPaciente(pacienteId);
     const [h, m] = to24h(hour12, minute, ampm).split(":").map(Number);
     const d = new Date(fecha + "T00:00:00");
     d.setHours(h, m, 0, 0);
@@ -138,9 +150,29 @@ export function AgendarCitaModal({
       }
     >
       <div className="space-y-5">
-        <Field label="Paciente" required>
-          <PacienteCombobox value={pacienteId} onChange={setPacienteId} />
-        </Field>
+        {/* No usamos <Field> (un <label>) aquí: como el buscador y el formulario
+            inline contienen botones, un <label> reenviaría el clic a su control
+            y cancelaría la creación. Replicamos el estilo con un <div>. */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-foreground">
+            Paciente<span className="text-coral"> *</span>
+          </span>
+          {creandoPaciente ? (
+            <InlineNuevoPacienteForm
+              onCreated={(p) => {
+                setPacienteId(p.id);
+                setCreandoPaciente(false);
+              }}
+              onCancel={() => setCreandoPaciente(false)}
+            />
+          ) : (
+            <PacienteCombobox
+              value={pacienteId}
+              onChange={setPacienteId}
+              onCreateNew={() => setCreandoPaciente(true)}
+            />
+          )}
+        </div>
 
         <Field label="Servicio" required>
           <Select value={servicioId} onChange={(e) => onServicio(e.target.value)}>
@@ -257,15 +289,19 @@ function nombreCompleto(p: PacienteMock) {
 function PacienteCombobox({
   value,
   onChange,
+  onCreateNew,
 }: {
   value: string;
   onChange: (id: string) => void;
+  onCreateNew: () => void;
 }) {
+  const { listPacientes } = useExpedienteStore();
+  const pacientes = useMemo(() => listPacientes(), [listPacientes]);
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const selected = value ? pacientesMock.find((p) => p.id === value) : null;
+  const selected = value ? pacientes.find((p) => p.id === value) : null;
 
   useEffect(() => {
     if (!open) return;
@@ -279,15 +315,15 @@ function PacienteCombobox({
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     const base = q
-      ? pacientesMock.filter((p) => {
+      ? pacientes.filter((p) => {
           const nom = nombreCompleto(p).toLowerCase();
           const ced = p.identificacion?.numero?.toLowerCase() ?? "";
           const tel = p.telefonoTutor.toLowerCase();
           return nom.includes(q) || ced.includes(q) || tel.includes(q);
         })
-      : pacientesMock;
+      : pacientes;
     return base.slice(0, 8);
-  }, [query]);
+  }, [query, pacientes]);
 
   const pick = (p: PacienteMock) => {
     onChange(p.id);
@@ -315,7 +351,7 @@ function PacienteCombobox({
       </div>
 
       {open ? (
-        <div className="absolute z-20 mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-border bg-card p-1 shadow-elevated">
+        <div className="absolute z-20 mt-1 max-h-80 w-full overflow-y-auto rounded-xl border border-border bg-card p-1 shadow-elevated">
           {results.length === 0 ? (
             <p className="px-3 py-3 text-sm text-muted-foreground">
               Sin coincidencias.
@@ -348,6 +384,25 @@ function PacienteCombobox({
               );
             })
           )}
+
+          {/* Crear un nuevo expediente sin salir del panel, igual que en el
+              consultorio de referencia. */}
+          <div className="sticky bottom-0 mt-1 border-t border-border bg-card pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setQuery("");
+                onCreateNew();
+              }}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-navy transition-colors hover:bg-navy/5"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy">
+                <UserPlus size={14} strokeWidth={1.75} />
+              </span>
+              <span className="text-sm font-medium">Crear nuevo paciente</span>
+            </button>
+          </div>
         </div>
       ) : null}
     </div>

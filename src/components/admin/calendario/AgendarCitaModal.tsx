@@ -33,21 +33,39 @@ function from24h(hour: number): { hour12: number; ampm: "AM" | "PM" } {
   return { hour12, ampm };
 }
 
+export type ReagendarCita = {
+  id: string;
+  servicioSlug: string;
+  fechaHora: string;
+  duracionMin: number;
+  notas?: string;
+};
+
 export function AgendarCitaModal({
   open,
   onClose,
   defaultDate,
   defaultHour,
   defaultMinute,
+  defaultPacienteId,
+  reagendarCita,
+  onSaved,
 }: {
   open: boolean;
   onClose: () => void;
   defaultDate?: Date;
   defaultHour?: number;
   defaultMinute?: number;
+  /** Paciente preseleccionado (p. ej. al agendar desde la lista de espera). */
+  defaultPacienteId?: string;
+  /** Si se pasa, el panel reagenda (mueve) esa cita en vez de crear una nueva. */
+  reagendarCita?: ReagendarCita | null;
+  /** Callback tras guardar con éxito (agendar o reagendar). */
+  onSaved?: () => void;
 }) {
-  const { servicios, addCita, addNotificacion } = useClinic();
+  const { servicios, addCita, updateCita, addNotificacion } = useClinic();
   const { getPaciente } = useExpedienteStore();
+  const esReagenda = !!reagendarCita;
   const serviciosActivos = servicios.filter((s) => s.activo);
 
   const [pacienteId, setPacienteId] = useState("");
@@ -62,6 +80,23 @@ export function AgendarCitaModal({
 
   useEffect(() => {
     if (!open) return;
+    setCreandoPaciente(false);
+    setPacienteId(defaultPacienteId ?? "");
+
+    if (reagendarCita) {
+      // Reagendar: precargamos servicio, fecha/hora y duración de la cita actual.
+      const rd = new Date(reagendarCita.fechaHora);
+      setFecha(format(rd, "yyyy-MM-dd"));
+      const { hour12: h12, ampm: ap } = from24h(rd.getHours());
+      setHour12(h12);
+      setAmpm(ap);
+      setMinute(String(rd.getMinutes()).padStart(2, "0"));
+      setServicioId(reagendarCita.servicioSlug);
+      setDuracion(String(reagendarCita.duracionMin || 30));
+      setNotas(reagendarCita.notas ?? "");
+      return;
+    }
+
     const d = defaultDate ?? new Date();
     setFecha(format(d, "yyyy-MM-dd"));
     const h = defaultHour ?? 9;
@@ -69,16 +104,12 @@ export function AgendarCitaModal({
     setHour12(h12);
     setAmpm(ap);
     setMinute(
-      defaultMinute != null
-        ? String(defaultMinute).padStart(2, "0")
-        : "00",
+      defaultMinute != null ? String(defaultMinute).padStart(2, "0") : "00",
     );
-    setPacienteId("");
-    setCreandoPaciente(false);
     setServicioId("");
     setDuracion("30");
     setNotas("");
-  }, [open, defaultDate, defaultHour, defaultMinute]);
+  }, [open, defaultDate, defaultHour, defaultMinute, defaultPacienteId, reagendarCita]);
 
   const servicio = useMemo(
     () => serviciosActivos.find((s) => s.id === servicioId),
@@ -101,12 +132,32 @@ export function AgendarCitaModal({
     const [h, m] = to24h(hour12, minute, ampm).split(":").map(Number);
     const d = new Date(fecha + "T00:00:00");
     d.setHours(h, m, 0, 0);
+    const duracionMin = Number(duracion) || servicio?.duracionMin || 30;
+
+    if (reagendarCita) {
+      // Reagendar: se mueve la cita existente (no se crea una nueva).
+      updateCita(reagendarCita.id, {
+        servicioSlug: servicioId,
+        fechaHora: d.toISOString(),
+        duracionMin,
+        estado: "agendada",
+        notas: notas.trim() || undefined,
+        monto: servicio?.precio,
+      });
+      toast.success("Cita reagendada", {
+        description: `${paciente?.nombre} · ${format(d, "dd/MM · HH:mm")}`,
+      });
+      onSaved?.();
+      onClose();
+      return;
+    }
+
     const cita: CitaFull = {
       id: `c-${Date.now()}`,
       pacienteId,
       servicioSlug: servicioId,
       fechaHora: d.toISOString(),
-      duracionMin: Number(duracion) || servicio?.duracionMin || 30,
+      duracionMin,
       estado: "agendada",
       source: "manual",
       referenceCode: `GK-${Math.floor(10000 + Math.random() * 90000)}`,
@@ -127,6 +178,7 @@ export function AgendarCitaModal({
     toast.success("Cita agendada", {
       description: `${paciente?.nombre} · ${format(d, "dd/MM · HH:mm")}`,
     });
+    onSaved?.();
     onClose();
   };
 
@@ -134,8 +186,12 @@ export function AgendarCitaModal({
     <SidePanel
       open={open}
       onClose={onClose}
-      title="Agendar nueva cita"
-      subtitle="Crea una cita para un paciente desde el calendario admin."
+      title={esReagenda ? "Reagendar cita" : "Agendar nueva cita"}
+      subtitle={
+        esReagenda
+          ? "Mueve la cita vigente del paciente a un nuevo espacio."
+          : "Crea una cita para un paciente desde el calendario admin."
+      }
       widthClass="sm:max-w-lg lg:max-w-xl"
       footer={
         <>
@@ -144,7 +200,7 @@ export function AgendarCitaModal({
           </Button>
           <Button onClick={submit}>
             <CalendarPlus size={14} strokeWidth={1.75} />
-            Agendar cita
+            {esReagenda ? "Reagendar cita" : "Agendar cita"}
           </Button>
         </>
       }

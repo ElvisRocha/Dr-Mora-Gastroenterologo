@@ -10,23 +10,26 @@ import {
   UserPlus,
   X,
 } from "lucide-react";
-import { formatDistanceToNowStrict } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/lib/cn";
-import { useClinic } from "@/store/clinicStore";
+import { useClinic, type CitaFull } from "@/store/clinicStore";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Field, Input, Select, Textarea } from "@/components/ui/Input";
 import {
-  PRIORIDAD_BADGE,
+  AgendarCitaModal,
+  type ReagendarCita,
+} from "@/components/admin/calendario/AgendarCitaModal";
+import {
   PRIORIDAD_LABEL,
-  SOURCE_LABEL,
   type ListaEsperaMock,
   type PrioridadEspera,
 } from "@/lib/data/listaEspera";
 import { formatTelefono } from "@/lib/data/conversaciones";
+import { pacientePorId, TIPO_ID_LABEL } from "@/lib/mock";
 import { agoHr } from "@/lib/data/time";
 
 const PRIORIDAD_DOT: Record<PrioridadEspera, string> = {
@@ -36,12 +39,19 @@ const PRIORIDAD_DOT: Record<PrioridadEspera, string> = {
   sin_triar: "bg-muted-foreground/40",
 };
 
+// Estados de cita que cuentan como "próxima cita" vigente (habilita Reagendar).
+const CITA_VIGENTE: CitaFull["estado"][] = ["agendada", "confirmada"];
+
+const formatProximaCita = (iso?: string): string =>
+  iso ? format(new Date(iso), "EEEE d 'de' MMMM, h:mm a", { locale: es }) : "—";
+
 export default function ListaEspera() {
-  const { listaEspera, updateEspera, addEspera, servicios } = useClinic();
+  const { listaEspera, updateEspera, addEspera, servicios, citas } = useClinic();
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const [menuId, setMenuId] = useState<string | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [agendarRow, setAgendarRow] = useState<ListaEsperaMock | null>(null);
 
   const reasignando = params.get("reasignar") === "1";
   const reFecha = params.get("fecha");
@@ -63,6 +73,25 @@ export default function ListaEspera() {
     [listaEspera],
   );
 
+  // Próxima cita vigente (futura, no cancelada/realizada/no-asistió) por paciente.
+  // Si existe, la fila muestra "Reagendar" en vez de "Agendar".
+  const proximaCitaPorPaciente = useMemo(() => {
+    const ahora = Date.now();
+    const map = new Map<string, CitaFull>();
+    for (const c of citas) {
+      if (!c.pacienteId || !CITA_VIGENTE.includes(c.estado)) continue;
+      if (+new Date(c.fechaHora) < ahora) continue;
+      const cur = map.get(c.pacienteId);
+      if (!cur || +new Date(c.fechaHora) < +new Date(cur.fechaHora)) {
+        map.set(c.pacienteId, c);
+      }
+    }
+    return map;
+  }, [citas]);
+
+  const proximaDe = (e: ListaEsperaMock): CitaFull | undefined =>
+    e.pacienteId ? proximaCitaPorPaciente.get(e.pacienteId) : undefined;
+
   const dismissReasignar = () => {
     params.delete("reasignar");
     params.delete("fecha");
@@ -71,11 +100,23 @@ export default function ListaEspera() {
     setParams(params, { replace: true });
   };
 
-  const agendar = (e: ListaEsperaMock) => {
-    updateEspera(e.id, { estado: "agendada" });
-    toast.success(`${e.nombre} agendado`, {
-      description: "Se movió de la lista de espera a la agenda.",
-    });
+  // La cita a reagendar de la fila seleccionada (si el paciente ya tiene una).
+  const agendarReagendar: ReagendarCita | null = (() => {
+    const c = agendarRow ? proximaDe(agendarRow) : undefined;
+    return c
+      ? {
+          id: c.id,
+          servicioSlug: c.servicioSlug,
+          fechaHora: c.fechaHora,
+          duracionMin: c.duracionMin,
+          notas: c.notas,
+        }
+      : null;
+  })();
+
+  // Tras agendar/reagendar, la entrada pasa a "agendada" (sale de la lista).
+  const handleAgendarSaved = () => {
+    if (agendarRow) updateEspera(agendarRow.id, { estado: "agendada" });
     if (reasignando) dismissReasignar();
   };
 
@@ -122,174 +163,222 @@ export default function ListaEspera() {
 
       <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[820px] text-sm">
+          <table className="w-full min-w-[1180px] text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Paciente</th>
-                <th className="px-4 py-3 font-medium">Servicio</th>
-                <th className="px-4 py-3 font-medium">Motivo</th>
-                <th className="px-4 py-3 font-medium">Chat</th>
-                <th className="px-4 py-3 font-medium">Prioridad</th>
-                <th className="px-4 py-3 font-medium">Origen</th>
-                <th className="px-4 py-3 text-right font-medium">Acciones</th>
+              <tr className="border-b border-border bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3 text-left font-medium">Nombre del paciente</th>
+                <th className="px-4 py-3 text-center font-medium">Identificación</th>
+                <th className="px-4 py-3 text-center font-medium">Correo</th>
+                <th className="px-4 py-3 text-center font-medium">Servicio</th>
+                <th className="px-4 py-3 text-center font-medium">Observaciones</th>
+                <th className="px-4 py-3 text-center font-medium">Conversación</th>
+                <th className="px-4 py-3 text-center font-medium">Prioridad</th>
+                <th className="px-4 py-3 text-center font-medium">Próxima Cita</th>
+                <th className="px-4 py-3 text-center font-medium">Agendar</th>
               </tr>
             </thead>
             <tbody>
               {pendientes.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={7}
-                    className="px-4 py-10 text-center text-muted-foreground"
+                    colSpan={9}
+                    className="px-4 py-12 text-center text-muted-foreground"
                   >
                     Aún no hay pacientes en lista de espera.
                   </td>
                 </tr>
               ) : (
-                pendientes.map((e) => (
-                  <tr
-                    key={e.id}
-                    className="border-b border-border/70 last:border-0 hover:bg-muted/30"
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-medium text-foreground">
-                          {e.nombre}
+                pendientes.map((e) => {
+                  const paciente = e.pacienteId
+                    ? pacientePorId(e.pacienteId)
+                    : null;
+                  const nombre = paciente
+                    ? `${paciente.nombre} ${paciente.apellidoPaterno}`
+                    : e.nombre;
+                  const telefono = paciente?.telefonoTutor ?? e.telefono;
+                  const email = paciente?.email ?? e.email;
+                  const proxima = proximaDe(e);
+                  const puedeReagendar = !!proxima;
+                  return (
+                    <tr
+                      key={e.id}
+                      className="border-b border-border/70 last:border-0 align-top hover:bg-muted/30"
+                    >
+                      {/* Nombre + badges (lead / quién lo ingresó) + tiempo en espera */}
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-medium text-foreground">
+                            {nombre}
+                          </span>
+                          {!e.pacienteId ? (
+                            <Badge variant="neutral" className="normal-case tracking-normal">
+                              Lead
+                            </Badge>
+                          ) : null}
+                          {e.agregadoPor ? (
+                            <Badge variant="navy" className="normal-case tracking-normal">
+                              {e.agregadoPor}
+                            </Badge>
+                          ) : null}
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          En espera{" "}
+                          {formatDistanceToNow(new Date(e.fecha), {
+                            addSuffix: true,
+                            locale: es,
+                          })}
+                        </p>
+                      </td>
+
+                      {/* Identificación (del expediente vinculado) */}
+                      <td className="px-4 py-3 text-center text-muted-foreground">
+                        {paciente?.identificacion
+                          ? `${TIPO_ID_LABEL[paciente.identificacion.tipo]}: ${paciente.identificacion.numero}`
+                          : "—"}
+                      </td>
+
+                      {/* Correo */}
+                      <td className="max-w-[160px] px-4 py-3 text-center text-muted-foreground">
+                        <span className="block truncate" title={email ?? undefined}>
+                          {email || "—"}
                         </span>
-                        {!e.pacienteId ? (
-                          <Badge variant="neutral" className="normal-case tracking-normal">
-                            Lead
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {e.tutorNombre} · en espera{" "}
-                        {formatDistanceToNowStrict(new Date(e.fecha), {
-                          locale: es,
-                        })}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {e.servicioNombre ?? "—"}
-                    </td>
-                    <td className="max-w-[220px] px-4 py-3">
-                      <p className="line-clamp-2 text-xs text-muted-foreground">
-                        {e.motivo ?? "—"}
-                      </p>
-                    </td>
-                    <td className="px-4 py-3">
-                      {e.tieneConversacion ? (
+                      </td>
+
+                      {/* Servicio */}
+                      <td className="max-w-[160px] px-4 py-3 text-center text-muted-foreground">
+                        <span className="block truncate" title={e.servicioNombre ?? undefined}>
+                          {e.servicioNombre || "—"}
+                        </span>
+                      </td>
+
+                      {/* Observaciones (motivo) */}
+                      <td className="max-w-[220px] px-4 py-3 text-center text-xs text-muted-foreground">
+                        <span className="block whitespace-pre-line break-words">
+                          {e.motivo || "—"}
+                        </span>
+                      </td>
+
+                      {/* Conversación: teléfono → chat */}
+                      <td className="px-4 py-3 text-center">
                         <button
                           type="button"
                           onClick={() =>
                             navigate(
-                              `/admin/conversaciones?phone=${encodeURIComponent(e.telefono)}`,
+                              `/admin/conversaciones?phone=${encodeURIComponent(telefono)}`,
                             )
                           }
-                          className="relative inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs text-navy hover:bg-navy/5"
+                          className="relative inline-flex items-center gap-1.5 text-xs text-navy hover:underline"
+                          title="Abrir la conversación"
                         >
                           <MessagesSquare size={13} />
-                          {formatTelefono(e.telefono)}
+                          {formatTelefono(telefono)}
                           {e.noLeidos > 0 ? (
-                            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-leaf px-1 text-[10px] font-semibold text-offblack">
-                              {e.noLeidos}
+                            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-navy px-1 text-[10px] font-semibold text-offwhite">
+                              {e.noLeidos > 9 ? "9+" : e.noLeidos}
                             </span>
                           ) : null}
                         </button>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">
-                          {formatTelefono(e.telefono)}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="relative inline-flex items-center gap-1.5">
-                        <span
-                          className={cn(
-                            "h-2 w-2 rounded-full",
-                            PRIORIDAD_DOT[e.prioridad],
-                          )}
-                        />
-                        <select
-                          value={e.prioridad}
-                          onChange={(ev) =>
-                            updateEspera(e.id, {
-                              prioridad: ev.target.value as PrioridadEspera,
-                            })
-                          }
-                          className="cursor-pointer rounded-md border border-border bg-card py-1 pl-1 pr-6 text-xs outline-none focus:border-navy/40"
-                        >
-                          {(
-                            ["alta", "media", "baja", "sin_triar"] as PrioridadEspera[]
-                          ).map((p) => (
-                            <option key={p} value={p}>
-                              {PRIORIDAD_LABEL[p]}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={PRIORIDAD_BADGE[e.prioridad] === "coral" ? "coral" : "neutral"} className="normal-case tracking-normal">
-                        {SOURCE_LABEL[e.source]}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => agendar(e)}
-                          className="h-8 px-3 text-xs"
-                        >
-                          <CalendarPlus size={14} />
-                          Agendar
-                        </Button>
-                        <div className="relative">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setMenuId(menuId === e.id ? null : e.id)
+                      </td>
+
+                      {/* Prioridad: triage inline */}
+                      <td className="px-4 py-3">
+                        <div className="relative inline-flex items-center gap-1.5">
+                          <span
+                            className={cn(
+                              "h-2 w-2 rounded-full",
+                              PRIORIDAD_DOT[e.prioridad],
+                            )}
+                          />
+                          <select
+                            value={e.prioridad}
+                            onChange={(ev) =>
+                              updateEspera(e.id, {
+                                prioridad: ev.target.value as PrioridadEspera,
+                              })
                             }
-                            className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                            className="cursor-pointer rounded-md border border-border bg-card py-1 pl-1 pr-6 text-xs outline-none focus:border-navy/40"
                           >
-                            <MoreVertical size={16} />
-                          </button>
-                          {menuId === e.id ? (
-                            <div
-                              className="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-xl border border-border bg-card shadow-elevated"
-                              onMouseLeave={() => setMenuId(null)}
-                            >
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  updateEspera(e.id, { estado: "atendida" });
-                                  setMenuId(null);
-                                  toast.success("Marcado como atendido");
-                                }}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
-                              >
-                                <CheckCircle2 size={15} className="text-leaf" />
-                                Marcar atendido
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  updateEspera(e.id, { estado: "descartada" });
-                                  setMenuId(null);
-                                  toast("Descartado de la lista");
-                                }}
-                                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-coral hover:bg-coral/10"
-                              >
-                                <Ban size={15} />
-                                Descartar
-                              </button>
-                            </div>
-                          ) : null}
+                            {(
+                              ["alta", "media", "baja", "sin_triar"] as PrioridadEspera[]
+                            ).map((p) => (
+                              <option key={p} value={p}>
+                                {PRIORIDAD_LABEL[p]}
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+
+                      {/* Próxima Cita */}
+                      <td className="px-4 py-3 text-center text-xs text-muted-foreground">
+                        <span className="block whitespace-pre-line break-words capitalize">
+                          {formatProximaCita(proxima?.fechaHora)}
+                        </span>
+                      </td>
+
+                      {/* Agendar / Reagendar + menú de acciones */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setAgendarRow(e)}
+                            className="h-8 px-3 text-xs"
+                          >
+                            {puedeReagendar ? (
+                              <CalendarClock size={14} />
+                            ) : (
+                              <CalendarPlus size={14} />
+                            )}
+                            {puedeReagendar ? "Reagendar" : "Agendar"}
+                          </Button>
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setMenuId(menuId === e.id ? null : e.id)
+                              }
+                              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                            >
+                              <MoreVertical size={16} />
+                            </button>
+                            {menuId === e.id ? (
+                              <div
+                                className="absolute right-0 z-20 mt-1 w-48 overflow-hidden rounded-xl border border-border bg-card shadow-elevated"
+                                onMouseLeave={() => setMenuId(null)}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    updateEspera(e.id, { estado: "atendida" });
+                                    setMenuId(null);
+                                    toast.success("Marcado como atendido");
+                                  }}
+                                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-muted"
+                                >
+                                  <CheckCircle2 size={15} className="text-leaf" />
+                                  Marcar atendida
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    updateEspera(e.id, { estado: "descartada" });
+                                    setMenuId(null);
+                                    toast("Descartado de la lista");
+                                  }}
+                                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-coral hover:bg-coral/10"
+                                >
+                                  <Ban size={15} />
+                                  Descartar
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -314,6 +403,16 @@ export default function ListaEspera() {
           setAddOpen(false);
           toast.success("Agregado a lista de espera");
         }}
+      />
+
+      {/* Mismo panel de "Agendar cita" del calendario. Si el paciente ya tiene
+          una cita vigente, abre en modo reagendar (mueve esa cita). */}
+      <AgendarCitaModal
+        open={!!agendarRow}
+        onClose={() => setAgendarRow(null)}
+        defaultPacienteId={agendarRow?.pacienteId}
+        reagendarCita={agendarReagendar}
+        onSaved={handleAgendarSaved}
       />
     </div>
   );

@@ -65,7 +65,7 @@ export default function Conversaciones() {
             Conversaciones
           </h2>
           <p className="text-sm text-muted-foreground">
-            Bandeja unificada de WhatsApp, Instagram y Facebook ·{" "}
+            Bandeja unificada de WhatsApp y sitio web ·{" "}
             <span className="font-medium text-navy">
               {totalNoLeidos} sin leer
             </span>

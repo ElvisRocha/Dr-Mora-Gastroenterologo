@@ -9,7 +9,7 @@ import { agoMin, agoHr, agoDay } from "./time";
 
 export const ASISTENTE_NOMBRE = "Gastrito";
 
-export type CanalChat = "whatsapp" | "instagram" | "facebook";
+export type CanalChat = "whatsapp" | "web";
 
 /** Quién emite el mensaje: el tutor (entrante), el bot Gastrito o el staff. */
 export type MensajeAutor = "tutor" | "bot" | "staff";
@@ -215,7 +215,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   },
   {
     id: "cv-004",
-    canal: "instagram",
+    canal: "web",
     telefono: "+506 8984-5510",
     contactoNombre: "Gabriela Fuentes",
     pacienteNombre: "Emma (2 años)",
@@ -284,7 +284,7 @@ export const conversacionesSeed: ConversacionMock[] = [
   },
   {
     id: "cv-010",
-    canal: "facebook",
+    canal: "web",
     telefono: "+506 6540-1177",
     contactoNombre: "Paola Nieto",
     pacienteNombre: "Sebastián (5 meses)",

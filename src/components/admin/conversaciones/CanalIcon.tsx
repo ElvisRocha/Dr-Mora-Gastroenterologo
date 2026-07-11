@@ -1,4 +1,4 @@
-import { Facebook, Instagram } from "lucide-react";
+import { Globe } from "lucide-react";
 import type { CanalChat } from "@/lib/data/conversaciones";
 import { cn } from "@/lib/cn";
 
@@ -30,7 +30,6 @@ export function CanalIcon({
   const style = { width: size, height: size };
   if (canal === "whatsapp")
     return <WhatsAppGlyph size={size} className={cn("text-[#25D366]", className)} />;
-  if (canal === "instagram")
-    return <Instagram style={style} className={cn("text-[#E1306C]", className)} strokeWidth={1.9} />;
-  return <Facebook style={style} className={cn("text-[#1877F2]", className)} strokeWidth={1.9} />;
+  // Sitio web (chat del formulario/página del consultorio).
+  return <Globe style={style} className={cn("text-navy", className)} strokeWidth={1.9} />;
 }

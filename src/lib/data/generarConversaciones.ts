@@ -88,8 +88,8 @@ function telefonoCR(rnd: () => number): string {
 }
 
 function canalDe(rnd: () => number): CanalChat {
-  const r = rnd();
-  return r < 0.82 ? "whatsapp" : r < 0.93 ? "instagram" : "facebook";
+  // Por ahora solo dos canales: WhatsApp (mayoría) y el sitio web.
+  return rnd() < 0.78 ? "whatsapp" : "web";
 }
 
 function categoriaDe(rnd: () => number): CategoriaTablero {

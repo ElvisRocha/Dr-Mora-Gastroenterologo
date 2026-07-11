@@ -44,7 +44,7 @@ export type CitaFull = CitaMock & {
   pacienteNombre?: string; // para citas de leads sin expediente
 };
 
-const STORAGE_KEY = "gastrokids:clinic:v4";
+const STORAGE_KEY = "gastrokids:clinic:v5";
 
 type ClinicState = {
   citas: CitaFull[];

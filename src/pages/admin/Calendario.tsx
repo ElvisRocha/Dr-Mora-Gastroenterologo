@@ -180,6 +180,17 @@ export default function Calendario() {
     );
   };
 
+  // Clic en una cita: abre el expediente. Si la cita está agendada o
+  // confirmada, además inicia la consulta (cronómetro corriendo). Las citas
+  // ya realizadas / canceladas / no asistidas solo se abren para consultar.
+  const openCita = (cita: CitaFull) => {
+    const iniciable = cita.estado === "agendada" || cita.estado === "confirmada";
+    navigate(
+      `/admin/pacientes/${cita.pacienteId}`,
+      iniciable ? { state: { fromCalendario: true, citaId: cita.id } } : undefined,
+    );
+  };
+
   const CitaCard = ({ cita, dense }: { cita: CitaFull; dense?: boolean }) => {
     const paciente = pacientePorId(cita.pacienteId);
     const src = SOURCE_CONFIG[cita.source];
@@ -187,9 +198,9 @@ export default function Calendario() {
       <div
         role="button"
         tabIndex={0}
-        onClick={() => navigate(`/admin/pacientes/${cita.pacienteId}`)}
+        onClick={() => openCita(cita)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") navigate(`/admin/pacientes/${cita.pacienteId}`);
+          if (e.key === "Enter") openCita(cita);
         }}
         className={cn(
           "group relative block w-full cursor-pointer rounded-md border text-left transition-shadow hover:shadow-sm",

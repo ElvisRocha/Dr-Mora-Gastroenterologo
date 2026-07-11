@@ -3,6 +3,7 @@ import {
   identificacionParaSeed,
   registroParaSeed,
 } from "@/lib/data/generarPacientes";
+import { generarCitas } from "@/lib/data/generarCitas";
 
 export type ServicioMock = {
   slug: string;
@@ -439,7 +440,9 @@ const at = (offsetDays: number, hour: number, minute = 0) => {
   return d.toISOString();
 };
 
-export const citasMock: CitaMock[] = [
+// Citas ancla de los pacientes demo (ligadas a sus consultas). Se combinan más
+// abajo con la agenda generada (generarCitas) una vez definidos los pacientes.
+const citasBase: CitaMock[] = [
   { id: "c-001", pacienteId: "p-001", servicioSlug: "consulta-gastro", fechaHora: at(-7, 10), duracionMin: 60, estado: "realizada" },
   { id: "c-002", pacienteId: "p-002", servicioSlug: "seguimiento-cronico", fechaHora: at(-5, 11, 30), duracionMin: 30, estado: "realizada" },
   { id: "c-003", pacienteId: "p-003", servicioSlug: "consulta-gastro", fechaHora: at(-3, 16), duracionMin: 60, estado: "realizada" },
@@ -478,6 +481,13 @@ const pacientesEnriquecidos: PacienteMock[] = pacientesBase.map((p, i) => ({
 export const pacientesMock: PacienteMock[] = [
   ...pacientesEnriquecidos,
   ...generarPacientes(200),
+];
+
+// Agenda completa: citas ancla de los pacientes demo + agenda generada al ~80%
+// para los próximos ~3 meses (y las últimas semanas), con estados variados.
+export const citasMock: CitaMock[] = [
+  ...citasBase,
+  ...generarCitas(pacientesMock),
 ];
 
 export function pacientePorId(id: string) {

@@ -26,18 +26,13 @@ export function SidePanel({
   children: ReactNode;
   widthClass?: string;
 }) {
+  // Se mantiene montado durante la animación de salida; el drawer se desmonta
+  // al terminar su animación (onAnimationEnd), igual que en el consultorio de
+  // referencia (slide-in / slide-out-to-right).
   const [render, setRender] = useState(open);
-  const [enter, setEnter] = useState(false);
 
   useEffect(() => {
-    if (open) {
-      setRender(true);
-      const id = requestAnimationFrame(() => setEnter(true));
-      return () => cancelAnimationFrame(id);
-    }
-    setEnter(false);
-    const t = setTimeout(() => setRender(false), 250);
-    return () => clearTimeout(t);
+    if (open) setRender(true);
   }, [open]);
 
   useEffect(() => {
@@ -64,16 +59,19 @@ export function SidePanel({
     >
       <div
         className={cn(
-          "absolute inset-0 bg-foreground/30 backdrop-blur-[2px] transition-opacity duration-200",
-          enter ? "opacity-100" : "opacity-0",
+          "absolute inset-0 bg-foreground/30 backdrop-blur-[2px]",
+          open ? "animate-overlay-in" : "animate-overlay-out",
         )}
         onClick={onClose}
       />
       <div
+        onAnimationEnd={(e) => {
+          if (e.target === e.currentTarget && !open) setRender(false);
+        }}
         className={cn(
-          "absolute inset-y-0 right-0 flex w-full flex-col border-l border-border bg-card shadow-elevated transition-transform duration-300 ease-gentle",
+          "absolute inset-y-0 right-0 flex w-full flex-col border-l border-border bg-card shadow-elevated",
           widthClass,
-          enter ? "translate-x-0" : "translate-x-full",
+          open ? "animate-slide-in-right" : "animate-slide-out-right",
         )}
       >
         <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4 md:px-6">

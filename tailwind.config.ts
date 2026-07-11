@@ -89,6 +89,24 @@ const config: Config = {
           "0%": { height: "0", opacity: "0" },
           "100%": { height: "var(--radix-accordion-content-height)", opacity: "1" },
         },
+        // Drawer lateral (panel "Agendar cita", "Nueva consulta"…): réplica del
+        // slide-in/slide-out-to-right del consultorio de referencia.
+        "slide-in-right": {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        "slide-out-right": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        "overlay-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "overlay-out": {
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.6s cubic-bezier(0.32, 0.72, 0, 1) both",
@@ -96,6 +114,10 @@ const config: Config = {
         "soft-pulse": "soft-pulse 3s ease-in-out infinite",
         "scale-in": "scale-in .3s ease-out both",
         marquee: "marquee 40s linear infinite",
+        "slide-in-right": "slide-in-right .3s ease-out",
+        "slide-out-right": "slide-out-right .3s ease-out forwards",
+        "overlay-in": "overlay-in .25s ease-out",
+        "overlay-out": "overlay-out .25s ease-out forwards",
       },
       transitionTimingFunction: {
         gentle: "cubic-bezier(0.32, 0.72, 0, 1)",

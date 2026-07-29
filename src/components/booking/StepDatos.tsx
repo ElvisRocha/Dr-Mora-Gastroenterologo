@@ -83,7 +83,7 @@ export function StepDatos({
           <Field label={t.booking.telefono} required>
             <Input
               type="tel"
-              placeholder="+52 55 …"
+              placeholder="+506 8888-8888"
               value={tutor.telefono ?? ""}
               onChange={(e) =>
                 onChange({ tutor: { telefono: e.target.value } })
@@ -183,7 +183,7 @@ export function StepDatos({
               <Field label={t.booking.telefono} required>
                 <Input
                   type="tel"
-                  placeholder="+52 55 …"
+                  placeholder="+506 8888-8888"
                   value={tutor.telefono ?? ""}
                   onChange={(e) =>
                     onChange({ tutor: { telefono: e.target.value } })

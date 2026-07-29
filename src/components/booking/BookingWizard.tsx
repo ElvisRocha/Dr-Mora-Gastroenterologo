@@ -16,6 +16,7 @@ import { StepDatos } from "./StepDatos";
 import { StepConfirmacion } from "./StepConfirmacion";
 import { bookingSchema, type BookingPayload } from "@/lib/schemas/bookingSchema";
 import { useAgendarCita } from "@/hooks/useAgendarCita";
+import { useClinic, type CitaFull } from "@/store/clinicStore";
 
 type WizardData = Partial<Omit<BookingPayload, "tutor" | "paciente">> & {
   tutor?: Partial<BookingPayload["tutor"]>;
@@ -30,6 +31,7 @@ export function BookingWizard() {
   const [esMayorDeEdad, setEsMayorDeEdad] = useState<boolean | null>(null);
   const [submitted, setSubmitted] = useState<{ id: string } | null>(null);
   const agendarMutation = useAgendarCita();
+  const { addCita, addNotificacion, servicios } = useClinic();
 
   const isMinor = esMayorDeEdad === false;
   const totalSteps = isMinor ? 5 : 4;
@@ -155,8 +157,43 @@ export function BookingWizard() {
       return;
     }
     try {
-      const res = await agendarMutation.mutateAsync(parsed.data);
-      setSubmitted({ id: res.cita_id });
+      await agendarMutation.mutateAsync(parsed.data);
+      const referenceCode = `GK-${Math.floor(10000 + Math.random() * 90000)}`;
+      const p = parsed.data;
+      const svc = servicios.find((s) => s.id === p.servicioSlug);
+      const pacienteNombre = `${p.paciente.nombre} ${p.paciente.apellidoPaterno}`.trim();
+      const tutorNombre = p.esMayorDeEdad
+        ? pacienteNombre
+        : `${p.tutor.nombre} ${p.tutor.apellidos}`.trim();
+      const [h, m] = (p.hora ?? "09:00").split(":").map(Number);
+      const fechaHora = new Date(p.fecha);
+      fechaHora.setHours(h, m ?? 0, 0, 0);
+
+      const cita: CitaFull = {
+        id: `c-web-${Date.now()}`,
+        pacienteId: `web-${Date.now()}`,
+        pacienteNombre,
+        tutorNombre,
+        servicioSlug: p.servicioSlug,
+        fechaHora: fechaHora.toISOString(),
+        duracionMin: svc?.duracionMin ?? 60,
+        estado: "agendada",
+        source: "web",
+        referenceCode,
+        monto: svc?.precio,
+        notas: p.motivo,
+      };
+      addCita(cita);
+      addNotificacion({
+        id: `n-${Date.now()}`,
+        tipo: "cita_agendada",
+        titulo: "Nueva cita desde el sitio web",
+        mensaje: `${pacienteNombre} agendó ${svc?.nombre ?? "una consulta"}. Código ${referenceCode}.`,
+        leida: false,
+        fecha: new Date().toISOString(),
+        vista: "calendario",
+      });
+      setSubmitted({ id: referenceCode });
       toast.success(t.booking.exito);
     } catch {
       toast.error(t.booking.error);
@@ -173,10 +210,10 @@ export function BookingWizard() {
           {t.booking.exito}
         </h2>
         <p className="mt-3 text-sm text-muted-foreground">
-          ID:{" "}
-          <span className="font-mono text-xs text-foreground">
-            {submitted.id}
-          </span>
+          Guarda tu código de cita para reprogramar o cancelar:
+        </p>
+        <p className="mt-3 inline-block rounded-xl border border-border bg-muted/40 px-5 py-2 font-mono text-lg font-semibold tracking-wider text-navy">
+          {submitted.id}
         </p>
       </div>
     );

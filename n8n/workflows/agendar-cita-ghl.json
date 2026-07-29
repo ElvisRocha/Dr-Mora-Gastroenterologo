@@ -174,7 +174,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "no-reply@gastrokids.mx",
+        "fromEmail": "no-reply@gastrokids.cr",
         "toEmail": "={{$('Preparar Datos').first().json.tutor.email}}",
         "subject": "Confirmación de cita · Gastro Kids",
         "emailType": "html",

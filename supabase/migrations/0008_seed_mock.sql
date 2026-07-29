@@ -42,8 +42,8 @@ on conflict (slug) do nothing;
 -- Site settings con valores reales de Gastro Kids
 update site_settings
 set
-  whatsapp = '+52 55 5555 5555',
-  email_contacto = 'contacto@gastrokids.mx',
-  direccion = 'Av. Reforma 1234, Piso 8, Cuauhtémoc, 06600, Ciudad de México',
+  whatsapp = '+506 8844-3322',
+  email_contacto = 'contacto@gastrokids.cr',
+  direccion = 'Av. Escazú, Torre Médica, Piso 4, Escazú, San José, Costa Rica',
   horario = 'Lun a Vie · 9:00 — 19:00 · Sáb · 9:00 — 14:00'
 where id = 1;

@@ -9,17 +9,17 @@ const trayectoria = {
     {
       anos: "2008 — 2014",
       titulo: "Medicina General",
-      institucion: "Facultad de Medicina, UNAM",
+      institucion: "Facultad de Medicina, Universidad de Costa Rica (UCR)",
     },
     {
       anos: "2014 — 2017",
       titulo: "Residencia en Pediatría",
-      institucion: "Hospital Infantil de México Federico Gómez",
+      institucion: "Hospital Nacional de Niños Dr. Carlos Sáenz Herrera, San José",
     },
     {
       anos: "2017 — 2019",
       titulo: "Subespecialidad en Gastroenterología, Hepatología y Nutrición Pediátrica",
-      institucion: "Instituto Nacional de Pediatría",
+      institucion: "Hospital Nacional de Niños · Caja Costarricense de Seguro Social",
     },
     {
       anos: "2019 — 2020",
@@ -29,24 +29,24 @@ const trayectoria = {
     {
       anos: "2020 — actual",
       titulo: "Práctica clínica privada y hospitalaria",
-      institucion: "Gastro Kids · Ciudad de México",
+      institucion: "Gastro Kids · San José, Costa Rica",
     },
   ],
   en: [
     {
       anos: "2008 — 2014",
       titulo: "Medical Doctor",
-      institucion: "School of Medicine, UNAM",
+      institucion: "School of Medicine, University of Costa Rica (UCR)",
     },
     {
       anos: "2014 — 2017",
       titulo: "Pediatrics Residency",
-      institucion: "Hospital Infantil de México Federico Gómez",
+      institucion: "Hospital Nacional de Niños Dr. Carlos Sáenz Herrera, San José",
     },
     {
       anos: "2017 — 2019",
       titulo: "Sub-specialty in Pediatric Gastroenterology, Hepatology and Nutrition",
-      institucion: "Instituto Nacional de Pediatría",
+      institucion: "Hospital Nacional de Niños · Costa Rican Social Security Fund",
     },
     {
       anos: "2019 — 2020",
@@ -56,7 +56,7 @@ const trayectoria = {
     {
       anos: "2020 — present",
       titulo: "Clinical and hospital practice",
-      institucion: "Gastro Kids · Mexico City",
+      institucion: "Gastro Kids · San José, Costa Rica",
     },
   ],
 };

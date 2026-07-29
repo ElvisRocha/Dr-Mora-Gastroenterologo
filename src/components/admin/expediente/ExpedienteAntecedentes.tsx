@@ -1,73 +1,92 @@
+import { Stethoscope, Users } from "lucide-react";
+import { Textarea } from "@/components/ui/Input";
 import { useExpediente } from "@/store/expedienteStore";
+import {
+  ExpedienteFooter,
+  Sec,
+  ToggleField,
+  useExpedienteSection,
+} from "./formKit";
 
 export function ExpedienteAntecedentes({ pacienteId }: { pacienteId: string }) {
-  const exp = useExpediente(pacienteId);
-  const a = exp.antecedentes;
-
-  return (
-    <div className="space-y-6">
-      <Section title="Antecedentes generales">
-        <Field label="Familiares">{a.familiares || "—"}</Field>
-        <Field label="Alergias">{a.alergias || "—"}</Field>
-        <Field label="Cirugías">{a.cirugias || "—"}</Field>
-        <Field label="Hospitalizaciones">{a.hospitalizaciones || "—"}</Field>
-      </Section>
-
-      <Section title="Antecedentes perinatales">
-        <Field label="Tipo de parto">
-          {a.perinatales.tipoParto === "vaginal"
-            ? "Vaginal"
-            : a.perinatales.tipoParto === "cesarea"
-              ? "Cesárea"
-              : "—"}
-        </Field>
-        <Field label="Peso al nacer">
-          {a.perinatales.pesoNacerKg ? `${a.perinatales.pesoNacerKg} kg` : "—"}
-        </Field>
-        <Field label="Talla al nacer">
-          {a.perinatales.tallaNacerCm ? `${a.perinatales.tallaNacerCm} cm` : "—"}
-        </Field>
-        <Field label="Semanas de gestación">
-          {a.perinatales.semanasGestacion || "—"}
-        </Field>
-        <Field label="Lactancia" full>
-          {a.perinatales.lactancia || "—"}
-        </Field>
-      </Section>
-    </div>
+  const initial = useExpediente(pacienteId).antecedentes;
+  const { form, set, dirty, saving, save } = useExpedienteSection(
+    pacienteId,
+    "antecedentes",
+    initial,
   );
-}
 
-function Section({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5">
-      <h3 className="mb-4 text-sm font-semibold text-foreground">{title}</h3>
-      <dl className="grid gap-3 sm:grid-cols-2">{children}</dl>
-    </div>
-  );
-}
+    <div className="space-y-4">
+      <Sec title="Antecedentes patológicos" icon={<Stethoscope size={16} strokeWidth={1.75} />}>
+        <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2 xl:grid-cols-3">
+          <ToggleField
+            label="¿Padece alguna enfermedad crónica?"
+            value={form.padeceEnfermedad}
+            onChange={(v) => set("padeceEnfermedad", v)}
+            detail={form.cualEnfermedad}
+            onDetail={(v) => set("cualEnfermedad", v)}
+            placeholder="¿Cuál?"
+          />
 
-function Field({
-  label,
-  children,
-  full,
-}: {
-  label: string;
-  children: React.ReactNode;
-  full?: boolean;
-}) {
-  return (
-    <div className={full ? "sm:col-span-2" : undefined}>
-      <dt className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        {label}
-      </dt>
-      <dd className="mt-1 text-sm text-foreground">{children}</dd>
+          <ToggleField
+            label="¿Toma algún medicamento, suplemento o vitamina?"
+            value={form.tomaMedicamentos}
+            onChange={(v) => set("tomaMedicamentos", v)}
+            detail={form.cualMedicamento}
+            onDetail={(v) => set("cualMedicamento", v)}
+            placeholder="¿Cuál?"
+          />
+
+          <ToggleField
+            label="¿Lo / la han operado?"
+            value={form.haSidoOperado}
+            onChange={(v) => set("haSidoOperado", v)}
+            detail={form.cirugias}
+            onDetail={(v) => set("cirugias", v)}
+            placeholder="¿De qué?"
+          />
+
+          <ToggleField
+            label="¿Ha estado hospitalizado(a)?"
+            value={form.haSidoHospitalizado}
+            onChange={(v) => set("haSidoHospitalizado", v)}
+            detail={form.hospitalizaciones}
+            onDetail={(v) => set("hospitalizaciones", v)}
+            placeholder="¿Motivo?"
+          />
+
+          <ToggleField
+            label="Alergias a medicamentos o alimentos"
+            value={form.tieneAlergias}
+            onChange={(v) => set("tieneAlergias", v)}
+            detail={form.alergias}
+            onDetail={(v) => set("alergias", v)}
+            placeholder="¿Cuáles?"
+          />
+        </div>
+      </Sec>
+
+      <Sec title="Antecedentes familiares" icon={<Users size={16} strokeWidth={1.75} />}>
+        <label className="block">
+          <span className="mb-1.5 block text-xs text-muted-foreground">
+            Enfermedades importantes en la familia
+          </span>
+          <Textarea
+            value={form.familiares}
+            onChange={(e) => set("familiares", e.target.value)}
+            placeholder="Ej: enfermedad celíaca, enfermedad inflamatoria intestinal, alergias alimentarias, intolerancias…"
+            className="min-h-[90px]"
+          />
+        </label>
+      </Sec>
+
+      <ExpedienteFooter
+        dirty={dirty}
+        saving={saving}
+        onSave={save}
+        label="antecedentes"
+      />
     </div>
   );
 }

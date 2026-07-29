@@ -1,6 +1,8 @@
 import { Outlet } from "react-router-dom";
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
+import { WhatsAppFAB } from "@/components/public/WhatsAppFAB";
+import { CitaManagerFAB } from "@/components/public/CitaManagerFAB";
 
 export function PublicLayout() {
   return (
@@ -10,6 +12,8 @@ export function PublicLayout() {
         <Outlet />
       </main>
       <Footer />
+      <WhatsAppFAB />
+      <CitaManagerFAB />
     </div>
   );
 }

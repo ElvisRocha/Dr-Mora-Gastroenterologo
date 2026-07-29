@@ -1,0 +1,486 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Calendar,
+  CalendarPlus,
+  Check,
+  Search,
+  User,
+  UserPlus,
+} from "lucide-react";
+import { toast } from "sonner";
+import { format } from "date-fns";
+import { SidePanel } from "@/components/ui/SidePanel";
+import { Button } from "@/components/ui/Button";
+import { Field, Input, Select, Textarea } from "@/components/ui/Input";
+import { useClinic, type CitaFull } from "@/store/clinicStore";
+import { useExpedienteStore } from "@/store/expedienteStore";
+import { TIPO_ID_LABEL, type PacienteMock } from "@/lib/mock";
+import { cn } from "@/lib/cn";
+import { InlineNuevoPacienteForm } from "./InlineNuevoPacienteForm";
+
+const MINUTOS = ["00", "15", "30", "45"];
+const HORAS12 = Array.from({ length: 12 }, (_, i) => i + 1);
+
+function to24h(hour12: number, minute: string, ampm: "AM" | "PM"): string {
+  let h = hour12 % 12;
+  if (ampm === "PM") h += 12;
+  return `${String(h).padStart(2, "0")}:${minute}`;
+}
+
+function from24h(hour: number): { hour12: number; ampm: "AM" | "PM" } {
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return { hour12, ampm };
+}
+
+export type ReagendarCita = {
+  id: string;
+  servicioSlug: string;
+  fechaHora: string;
+  duracionMin: number;
+  notas?: string;
+};
+
+export function AgendarCitaModal({
+  open,
+  onClose,
+  defaultDate,
+  defaultHour,
+  defaultMinute,
+  defaultPacienteId,
+  reagendarCita,
+  onSaved,
+  bare = false,
+  slotPick,
+  widthClass,
+}: {
+  open: boolean;
+  onClose: () => void;
+  defaultDate?: Date;
+  defaultHour?: number;
+  defaultMinute?: number;
+  /** Sin backdrop, para montar el panel sobre el calendario (lista de espera). */
+  bare?: boolean;
+  /** Franja elegida en el calendario: actualiza solo fecha/hora (sin resetear). */
+  slotPick?: { date: Date; hour: number; minute: number } | null;
+  widthClass?: string;
+  /** Paciente preseleccionado (p. ej. al agendar desde la lista de espera). */
+  defaultPacienteId?: string;
+  /** Si se pasa, el panel reagenda (mueve) esa cita en vez de crear una nueva. */
+  reagendarCita?: ReagendarCita | null;
+  /** Callback tras guardar con éxito (agendar o reagendar). */
+  onSaved?: () => void;
+}) {
+  const { servicios, addCita, updateCita, addNotificacion } = useClinic();
+  const { getPaciente } = useExpedienteStore();
+  const esReagenda = !!reagendarCita;
+  const serviciosActivos = servicios.filter((s) => s.activo);
+
+  const [pacienteId, setPacienteId] = useState("");
+  const [creandoPaciente, setCreandoPaciente] = useState(false);
+  const [servicioId, setServicioId] = useState("");
+  const [fecha, setFecha] = useState("");
+  const [hour12, setHour12] = useState(9);
+  const [minute, setMinute] = useState("00");
+  const [ampm, setAmpm] = useState<"AM" | "PM">("AM");
+  const [duracion, setDuracion] = useState("30");
+  const [notas, setNotas] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    setCreandoPaciente(false);
+    setPacienteId(defaultPacienteId ?? "");
+
+    if (reagendarCita) {
+      // Reagendar: precargamos servicio, fecha/hora y duración de la cita actual.
+      const rd = new Date(reagendarCita.fechaHora);
+      setFecha(format(rd, "yyyy-MM-dd"));
+      const { hour12: h12, ampm: ap } = from24h(rd.getHours());
+      setHour12(h12);
+      setAmpm(ap);
+      setMinute(String(rd.getMinutes()).padStart(2, "0"));
+      setServicioId(reagendarCita.servicioSlug);
+      setDuracion(String(reagendarCita.duracionMin || 30));
+      setNotas(reagendarCita.notas ?? "");
+      return;
+    }
+
+    const d = defaultDate ?? new Date();
+    setFecha(format(d, "yyyy-MM-dd"));
+    const h = defaultHour ?? 9;
+    const { hour12: h12, ampm: ap } = from24h(h);
+    setHour12(h12);
+    setAmpm(ap);
+    setMinute(
+      defaultMinute != null ? String(defaultMinute).padStart(2, "0") : "00",
+    );
+    setServicioId("");
+    setDuracion("30");
+    setNotas("");
+  }, [open, defaultDate, defaultHour, defaultMinute, defaultPacienteId, reagendarCita]);
+
+  // Al elegir una franja en el calendario (lista de espera) solo cambiamos
+  // fecha y hora, conservando paciente/servicio/notas ya escritos.
+  useEffect(() => {
+    if (!open || !slotPick) return;
+    setFecha(format(slotPick.date, "yyyy-MM-dd"));
+    const { hour12: h12, ampm: ap } = from24h(slotPick.hour);
+    setHour12(h12);
+    setAmpm(ap);
+    setMinute(String(slotPick.minute).padStart(2, "0"));
+  }, [slotPick, open]);
+
+  const servicio = useMemo(
+    () => serviciosActivos.find((s) => s.id === servicioId),
+    [serviciosActivos, servicioId],
+  );
+
+  // Al elegir servicio, precargamos su duración (editable).
+  const onServicio = (id: string) => {
+    setServicioId(id);
+    const s = serviciosActivos.find((x) => x.id === id);
+    if (s?.duracionMin) setDuracion(String(s.duracionMin));
+  };
+
+  const submit = () => {
+    if (!pacienteId || !servicioId || !fecha) {
+      toast.error("Completa paciente, servicio y fecha");
+      return;
+    }
+    const paciente = getPaciente(pacienteId);
+    const [h, m] = to24h(hour12, minute, ampm).split(":").map(Number);
+    const d = new Date(fecha + "T00:00:00");
+    d.setHours(h, m, 0, 0);
+    const duracionMin = Number(duracion) || servicio?.duracionMin || 30;
+
+    if (reagendarCita) {
+      // Reagendar: se mueve la cita existente (no se crea una nueva).
+      updateCita(reagendarCita.id, {
+        servicioSlug: servicioId,
+        fechaHora: d.toISOString(),
+        duracionMin,
+        estado: "agendada",
+        notas: notas.trim() || undefined,
+        monto: servicio?.precio,
+      });
+      toast.success("Cita reagendada", {
+        description: `${paciente?.nombre} · ${format(d, "dd/MM · HH:mm")}`,
+      });
+      onSaved?.();
+      onClose();
+      return;
+    }
+
+    const cita: CitaFull = {
+      id: `c-${Date.now()}`,
+      pacienteId,
+      servicioSlug: servicioId,
+      fechaHora: d.toISOString(),
+      duracionMin,
+      estado: "agendada",
+      source: "manual",
+      referenceCode: `GK-${Math.floor(10000 + Math.random() * 90000)}`,
+      monto: servicio?.precio,
+      notas: notas.trim() || undefined,
+    };
+    addCita(cita);
+    addNotificacion({
+      id: `n-${Date.now()}`,
+      tipo: "cita_agendada",
+      titulo: "Cita agendada",
+      mensaje: `${paciente?.nombre ?? "Paciente"} ${paciente?.apellidoPaterno ?? ""} · ${servicio?.nombre ?? ""}`,
+      leida: false,
+      fecha: new Date().toISOString(),
+      vista: "calendario",
+      pacienteId,
+    });
+    toast.success("Cita agendada", {
+      description: `${paciente?.nombre} · ${format(d, "dd/MM · HH:mm")}`,
+    });
+    onSaved?.();
+    onClose();
+  };
+
+  return (
+    <SidePanel
+      open={open}
+      onClose={onClose}
+      title={esReagenda ? "Reagendar cita" : "Agendar nueva cita"}
+      subtitle={
+        esReagenda
+          ? "Mueve la cita vigente del paciente a un nuevo espacio."
+          : "Crea una cita para un paciente desde el calendario admin."
+      }
+      bare={bare}
+      widthClass={widthClass ?? "sm:max-w-lg lg:max-w-xl"}
+      footer={
+        <>
+          <Button variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button onClick={submit}>
+            <CalendarPlus size={14} strokeWidth={1.75} />
+            {esReagenda ? "Reagendar cita" : "Agendar cita"}
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-5">
+        {/* No usamos <Field> (un <label>) aquí: como el buscador y el formulario
+            inline contienen botones, un <label> reenviaría el clic a su control
+            y cancelaría la creación. Replicamos el estilo con un <div>. */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-foreground">
+            Paciente<span className="text-coral"> *</span>
+          </span>
+          {creandoPaciente ? (
+            <InlineNuevoPacienteForm
+              onCreated={(p) => {
+                setPacienteId(p.id);
+                setCreandoPaciente(false);
+              }}
+              onCancel={() => setCreandoPaciente(false)}
+            />
+          ) : (
+            <PacienteCombobox
+              value={pacienteId}
+              onChange={setPacienteId}
+              onCreateNew={() => setCreandoPaciente(true)}
+            />
+          )}
+        </div>
+
+        <Field label="Servicio" required>
+          <Select value={servicioId} onChange={(e) => onServicio(e.target.value)}>
+            <option value="">Selecciona un servicio</option>
+            {serviciosActivos.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.nombre} · {s.duracion}
+              </option>
+            ))}
+          </Select>
+        </Field>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Fecha" required>
+            <div className="relative">
+              <Input
+                type="date"
+                value={fecha}
+                onChange={(e) => setFecha(e.target.value)}
+                className="pr-10"
+              />
+              <Calendar
+                size={15}
+                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+            </div>
+          </Field>
+          <Field label="Hora" required>
+            <div className="flex items-center gap-1">
+              <Select
+                value={hour12}
+                onChange={(e) => setHour12(Number(e.target.value))}
+                className="w-[3.75rem] shrink-0 px-2 pr-6 text-center"
+              >
+                {HORAS12.map((h) => (
+                  <option key={h} value={h}>
+                    {String(h).padStart(2, "0")}
+                  </option>
+                ))}
+              </Select>
+              <span className="font-semibold text-muted-foreground">:</span>
+              <Select
+                value={minute}
+                onChange={(e) => setMinute(e.target.value)}
+                className="w-[3.75rem] shrink-0 px-2 pr-6 text-center"
+              >
+                {MINUTOS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </Select>
+              <div className="ml-1 inline-flex shrink-0 overflow-hidden rounded-lg border border-border">
+                {(["AM", "PM"] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setAmpm(p)}
+                    className={cn(
+                      "px-2.5 py-2 text-xs font-semibold transition-colors",
+                      ampm === p
+                        ? "bg-navy text-offwhite"
+                        : "bg-card text-muted-foreground hover:bg-muted",
+                    )}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </Field>
+        </div>
+
+        <Field label="Duración (minutos)" required>
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={15}
+            step={15}
+            value={duracion}
+            onChange={(e) => setDuracion(e.target.value)}
+          />
+        </Field>
+
+        <Field label="Notas (opcional)">
+          <Textarea
+            value={notas}
+            onChange={(e) => setNotas(e.target.value)}
+            placeholder="Información adicional para el doctor…"
+          />
+        </Field>
+
+        {servicio ? (
+          <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm">
+            <p className="font-medium text-foreground">{servicio.nombre}</p>
+            <p className="text-xs text-muted-foreground">
+              Duración sugerida {servicio.duracion}
+              {servicio.requiereSecretaria
+                ? " · Requiere coordinación de recepción"
+                : ""}
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </SidePanel>
+  );
+}
+
+// ─── Buscador de paciente ───────────────────────────────────────────────────
+function nombreCompleto(p: PacienteMock) {
+  return `${p.nombre} ${p.apellidoPaterno}${p.apellidoMaterno ? ` ${p.apellidoMaterno}` : ""}`;
+}
+
+function PacienteCombobox({
+  value,
+  onChange,
+  onCreateNew,
+}: {
+  value: string;
+  onChange: (id: string) => void;
+  onCreateNew: () => void;
+}) {
+  const { listPacientes } = useExpedienteStore();
+  const pacientes = useMemo(() => listPacientes(), [listPacientes]);
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const selected = value ? pacientes.find((p) => p.id === value) : null;
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  const results = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const base = q
+      ? pacientes.filter((p) => {
+          const nom = nombreCompleto(p).toLowerCase();
+          const ced = p.identificacion?.numero?.toLowerCase() ?? "";
+          const tel = p.telefonoTutor.toLowerCase();
+          return nom.includes(q) || ced.includes(q) || tel.includes(q);
+        })
+      : pacientes;
+    return base.slice(0, 8);
+  }, [query, pacientes]);
+
+  const pick = (p: PacienteMock) => {
+    onChange(p.id);
+    setQuery("");
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <div className="relative">
+        <Search
+          size={15}
+          className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <Input
+          value={open ? query : selected ? nombreCompleto(selected) : query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            if (!open) setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder="Buscar paciente…"
+          className="pl-9"
+        />
+      </div>
+
+      {open ? (
+        <div className="absolute z-20 mt-1 max-h-80 w-full overflow-y-auto rounded-xl border border-border bg-card p-1 shadow-elevated">
+          {results.length === 0 ? (
+            <p className="px-3 py-3 text-sm text-muted-foreground">
+              Sin coincidencias.
+            </p>
+          ) : (
+            results.map((p) => {
+              const isSel = p.id === value;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => pick(p)}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
+                >
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy">
+                    <User size={14} strokeWidth={1.75} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-foreground">
+                      {nombreCompleto(p)}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {p.identificacion
+                        ? `${TIPO_ID_LABEL[p.identificacion.tipo]}: ${p.identificacion.numero}`
+                        : p.telefonoTutor}
+                    </span>
+                  </span>
+                  {isSel ? <Check size={15} className="text-leaf" /> : null}
+                </button>
+              );
+            })
+          )}
+
+          {/* Crear un nuevo expediente sin salir del panel, igual que en el
+              consultorio de referencia. */}
+          <div className="sticky bottom-0 mt-1 border-t border-border bg-card pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                setQuery("");
+                onCreateNew();
+              }}
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-navy transition-colors hover:bg-navy/5"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-navy/10 text-navy">
+                <UserPlus size={14} strokeWidth={1.75} />
+              </span>
+              <span className="text-sm font-medium">Crear nuevo paciente</span>
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}

@@ -1,3 +1,11 @@
+import {
+  generarPacientes,
+  identificacionParaSeed,
+  registroParaSeed,
+} from "@/lib/data/generarPacientes";
+import { generarCitas } from "@/lib/data/generarCitas";
+import landingHeroUrl from "@/assets/Landing.png";
+
 export type ServicioMock = {
   slug: string;
   icon: "stethoscope" | "scope" | "intestine" | "wave" | "leaf" | "lung" | "carrot" | "calendar";
@@ -7,7 +15,7 @@ export type ServicioMock = {
 };
 
 export const serviciosMock: ServicioMock[] = [
-  { slug: "consulta-gastro", icon: "stethoscope", duracion: 60, destacado: true },
+  { slug: "consulta-gastro", icon: "stethoscope", duracion: 45, destacado: true },
   { slug: "endoscopia-alta", icon: "scope", duracion: 45 },
   { slug: "colonoscopia", icon: "intestine", duracion: 60 },
   { slug: "phmetria", icon: "wave", duracion: 30 },
@@ -171,14 +179,13 @@ export const galeriaMock: GaleriaItem[] = [
 
 export const galeriaDestacada = galeriaMock.slice(0, 4);
 
-export const heroIlustracion =
-  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&h=1100&fit=crop&auto=format&q=80";
+export const heroIlustracion = landingHeroUrl;
 
 export const doctorPortrait =
   "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=640&h=800&fit=crop&auto=format&q=80";
 
 export const whatsappLink =
-  "https://wa.me/525555555555?text=Hola%2C%20me%20gustar%C3%ADa%20agendar%20una%20cita%20para%20mi%20hijo%2Fa.";
+  "https://wa.me/50688443322?text=Hola%2C%20me%20gustar%C3%ADa%20agendar%20una%20cita%20para%20mi%20hijo%2Fa.";
 
 export type MedicamentoMock = {
   nombre: string;
@@ -191,6 +198,21 @@ export type ProcedimientoAsignadoMock = {
   nombre: string;
   estado: "pendiente" | "realizado";
   fecha?: string;
+};
+
+export type TipoIdentificacion =
+  | "cedula"
+  | "dimex"
+  | "pasaporte"
+  | "indocumentada";
+
+export type IdentificacionMock = { tipo: TipoIdentificacion; numero: string };
+
+export const TIPO_ID_LABEL: Record<TipoIdentificacion, string> = {
+  cedula: "Cédula",
+  dimex: "DIMEX",
+  pasaporte: "Pasaporte",
+  indocumentada: "Sin cédula",
 };
 
 export type PacienteMock = {
@@ -208,9 +230,21 @@ export type PacienteMock = {
   email?: string;
   medicamentosActivos?: MedicamentoMock[];
   procedimientosAsignados?: ProcedimientoAsignadoMock[];
+  /** Identificación del paciente (o del tutor si el menor no tiene). */
+  identificacion?: IdentificacionMock;
+  /** Fecha en que el expediente entró al sistema (ISO date). */
+  fechaRegistro?: string;
+  tutorParentesco?: string;
+  direccion?: string;
+  /** Formulario de primera vez completado (intake inicial). */
+  formularioPrimeraVez?: boolean;
+  /** Formulario de seguimiento completado. */
+  formularioSeguimiento?: boolean;
+  /** Fecha (ISO) en que se sincronizó el expediente original migrado. */
+  sincronizadoAt?: string | null;
 };
 
-export const pacientesMock: PacienteMock[] = [
+const pacientesBase: PacienteMock[] = [
   {
     id: "p-001",
     nombre: "Tomás",
@@ -222,8 +256,8 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-04-22",
     proximaCita: "2026-05-08",
     tutorPrincipal: "Marisol Aguirre",
-    telefonoTutor: "+52 55 4729 1834",
-    email: "marisol.aguirre@correo.mx",
+    telefonoTutor: "+506 8729-1834",
+    email: "marisol.aguirre@correo.cr",
     medicamentosActivos: [
       { nombre: "Omeprazol", dosis: "5 mg", frecuencia: "1 vez/día", inicio: "2026-01-15" },
       { nombre: "Fórmula extensamente hidrolizada", dosis: "120 ml", frecuencia: "Cada 4 h" },
@@ -243,8 +277,8 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-03-18",
     proximaCita: "2026-05-12",
     tutorPrincipal: "Iván Reyes",
-    telefonoTutor: "+52 55 6118 2247",
-    email: "ivan.reyes@correo.mx",
+    telefonoTutor: "+506 7118-2247",
+    email: "ivan.reyes@correo.cr",
     medicamentosActivos: [
       { nombre: "Multivitamínico pediátrico", dosis: "1 tableta", frecuencia: "1 vez/día" },
     ],
@@ -260,8 +294,8 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-04-29",
     proximaCita: "2026-05-15",
     tutorPrincipal: "Patricia Krauss",
-    telefonoTutor: "+52 55 8472 9136",
-    email: "patricia.k@correo.mx",
+    telefonoTutor: "+506 6472-9136",
+    email: "patricia.k@correo.cr",
     medicamentosActivos: [
       { nombre: "Mesalazina", dosis: "800 mg", frecuencia: "3 veces/día" },
       { nombre: "Hierro polimaltosado", dosis: "100 mg", frecuencia: "1 vez/día" },
@@ -281,8 +315,8 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-04-15",
     proximaCita: "2026-05-19",
     tutorPrincipal: "Roberto Solórzano",
-    telefonoTutor: "+52 55 3194 8472",
-    email: "roberto.s@correo.mx",
+    telefonoTutor: "+506 7194-8472",
+    email: "roberto.s@correo.cr",
   },
   {
     id: "p-005",
@@ -295,7 +329,7 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-04-08",
     proximaCita: "2026-06-02",
     tutorPrincipal: "Andrea Villalpando",
-    telefonoTutor: "+52 55 7384 1928",
+    telefonoTutor: "+506 8384-1928",
   },
   {
     id: "p-006",
@@ -307,7 +341,7 @@ export const pacientesMock: PacienteMock[] = [
     diagnosticosActivos: ["Dispepsia funcional"],
     ultimaConsulta: "2026-04-30",
     tutorPrincipal: "Cecilia Lara",
-    telefonoTutor: "+52 55 4729 6612",
+    telefonoTutor: "+506 8729-6612",
   },
   {
     id: "p-007",
@@ -320,7 +354,7 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-03-04",
     proximaCita: "2026-05-20",
     tutorPrincipal: "Mariana Rincón",
-    telefonoTutor: "+52 55 9183 4729",
+    telefonoTutor: "+506 7183-4729",
   },
   {
     id: "p-008",
@@ -332,8 +366,8 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-04-26",
     proximaCita: "2026-05-09",
     tutorPrincipal: "Esteban Bautista",
-    telefonoTutor: "+52 55 6612 8472",
-    email: "e.bautista@correo.mx",
+    telefonoTutor: "+506 7612-8472",
+    email: "e.bautista@correo.cr",
   },
   {
     id: "p-009",
@@ -346,7 +380,7 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-04-17",
     proximaCita: "2026-05-06",
     tutorPrincipal: "Verónica Santos",
-    telefonoTutor: "+52 55 8472 1928",
+    telefonoTutor: "+506 6472-1928",
   },
   {
     id: "p-010",
@@ -359,7 +393,7 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-03-22",
     proximaCita: "2026-05-22",
     tutorPrincipal: "Fernando Higuera",
-    telefonoTutor: "+52 55 1928 4729",
+    telefonoTutor: "+506 7928-4729",
   },
   {
     id: "p-011",
@@ -371,7 +405,7 @@ export const pacientesMock: PacienteMock[] = [
     diagnosticosActivos: ["Selectividad alimentaria"],
     ultimaConsulta: "2026-04-12",
     tutorPrincipal: "Jimena Vergara",
-    telefonoTutor: "+52 55 2734 6612",
+    telefonoTutor: "+506 8734-6612",
   },
   {
     id: "p-012",
@@ -384,7 +418,7 @@ export const pacientesMock: PacienteMock[] = [
     ultimaConsulta: "2026-04-05",
     proximaCita: "2026-05-13",
     tutorPrincipal: "Lucía Olvera",
-    telefonoTutor: "+52 55 6118 9472",
+    telefonoTutor: "+506 7118-9472",
   },
 ];
 
@@ -406,7 +440,9 @@ const at = (offsetDays: number, hour: number, minute = 0) => {
   return d.toISOString();
 };
 
-export const citasMock: CitaMock[] = [
+// Citas ancla de los pacientes demo (ligadas a sus consultas). Se combinan más
+// abajo con la agenda generada (generarCitas) una vez definidos los pacientes.
+const citasBase: CitaMock[] = [
   { id: "c-001", pacienteId: "p-001", servicioSlug: "consulta-gastro", fechaHora: at(-7, 10), duracionMin: 60, estado: "realizada" },
   { id: "c-002", pacienteId: "p-002", servicioSlug: "seguimiento-cronico", fechaHora: at(-5, 11, 30), duracionMin: 30, estado: "realizada" },
   { id: "c-003", pacienteId: "p-003", servicioSlug: "consulta-gastro", fechaHora: at(-3, 16), duracionMin: 60, estado: "realizada" },
@@ -433,8 +469,37 @@ export const citasMock: CitaMock[] = [
   { id: "c-024", pacienteId: "p-010", servicioSlug: "consulta-gastro", fechaHora: at(25, 9), duracionMin: 60, estado: "agendada" },
 ];
 
+// Enriquecemos los 12 pacientes base con identificación y fecha de registro
+// deterministas, y añadimos ~200 pacientes generados para la demo a gran escala.
+const pacientesEnriquecidos: PacienteMock[] = pacientesBase.map((p, i) => ({
+  ...p,
+  identificacion: p.identificacion ?? identificacionParaSeed(i + 1),
+  fechaRegistro: p.fechaRegistro ?? registroParaSeed(i + 300),
+  tutorParentesco: p.tutorParentesco ?? "madre",
+}));
+
+export const pacientesMock: PacienteMock[] = [
+  ...pacientesEnriquecidos,
+  ...generarPacientes(200),
+];
+
+// Agenda completa: citas ancla de los pacientes demo + agenda generada al ~80%
+// para los próximos ~3 meses (y las últimas semanas), con estados variados.
+export const citasMock: CitaMock[] = [
+  ...citasBase,
+  ...generarCitas(pacientesMock, citasBase),
+];
+
 export function pacientePorId(id: string) {
   return pacientesMock.find((p) => p.id === id);
+}
+
+/** Edad legible para tablas: "8 meses", "3 años", "15 años". */
+export function formatearEdadTabla(fechaNacimiento: string): string {
+  const { anos, meses } = calcularEdad(fechaNacimiento);
+  if (anos < 1) return `${anos * 12 + meses} meses`;
+  if (anos < 2) return `1 año ${meses} m`;
+  return `${anos} años`;
 }
 
 export function calcularEdad(fechaNacimiento: string): { anos: number; meses: number } {
@@ -479,27 +544,66 @@ export type AntropometriaMock = {
   percentilPeso?: string;
 };
 
+/** Chip de tres estados: Sí = true, No = false, sin responder = null. */
+export type TriState = boolean | null;
+
 export type AntecedentesMock = {
-  familiares: string;
-  alergias: string;
+  // Antecedentes patológicos personales (chip Sí/No + detalle)
+  padeceEnfermedad: TriState;
+  cualEnfermedad: string;
+  tomaMedicamentos: TriState;
+  cualMedicamento: string;
+  haSidoOperado: TriState;
   cirugias: string;
+  haSidoHospitalizado: TriState;
   hospitalizaciones: string;
-  perinatales: {
-    tipoParto: "vaginal" | "cesarea" | "no_especificado";
-    pesoNacerKg: number;
-    tallaNacerCm: number;
-    semanasGestacion: number;
-    lactancia: string;
-  };
+  tieneAlergias: TriState;
+  alergias: string;
+  // Antecedentes familiares
+  familiares: string;
+};
+
+export type PerinatalMock = {
+  // Embarazo y parto
+  tipoParto: "vaginal" | "cesarea" | "no_especificado";
+  semanasGestacion: number;
+  pesoNacerKg: number;
+  tallaNacerCm: number;
+  complicacionesParto: TriState;
+  complicacionesDetalle: string;
+  // Lactancia y alimentación temprana
+  lactanciaMaterna: TriState;
+  lactancia: string;
+  ablactacionMeses: number;
+  // Desarrollo psicomotor
+  desarrolloAcorde: TriState;
+  hitos: string;
+  // Esquema de vacunación
+  esquemaCompleto: TriState;
+  vacunasNotas: string;
 };
 
 export type HabitoDigestivoMock = {
   bristolEscala: number;
   frecuenciaSemanal: number;
   dolorDefecar: boolean;
+  dolorDefecarDetalle: string;
   sangrado: boolean;
+  sangradoDetalle: string;
   distension: string;
   reflujo: string;
+  // Síntomas digestivos actuales (chip Sí/No + detalle que se activa con "Sí")
+  dolorAbdominal: TriState;
+  dolorAbdominalDetalle: string;
+  estrenimiento: TriState;
+  estrenimientoDetalle: string;
+  diarrea: TriState;
+  diarreaDetalle: string;
+  nauseaVomito: TriState;
+  nauseaVomitoDetalle: string;
+  pirosis: TriState;
+  pirosisDetalle: string;
+  sintomasNotas: string;
 };
 
 export type AlimentacionMock = {
@@ -507,6 +611,7 @@ export type AlimentacionMock = {
   dietaEspecial: string;
   alimentosPreferidos: string[];
   alimentosRechazados: string[];
+  apetito: "" | "bueno" | "regular" | "malo";
 };
 
 export type VacunaMock = {
@@ -517,6 +622,7 @@ export type VacunaMock = {
 
 export type ExpedienteMock = {
   antecedentes: AntecedentesMock;
+  perinatal: PerinatalMock;
   antropometria: AntropometriaMock[];
   habitoDigestivo: HabitoDigestivoMock;
   alimentacion: AlimentacionMock;
@@ -527,17 +633,32 @@ export type ExpedienteMock = {
 export const expedientesMock: Record<string, ExpedienteMock> = {
   "p-001": {
     antecedentes: {
-      familiares: "Madre con atopia. Tío materno con EII (Crohn).",
-      alergias: "Proteína de leche de vaca.",
+      padeceEnfermedad: true,
+      cualEnfermedad: "Alergia a la proteína de leche de vaca (APLV), en seguimiento.",
+      tomaMedicamentos: false,
+      cualMedicamento: "",
+      haSidoOperado: false,
       cirugias: "Ninguna.",
+      haSidoHospitalizado: true,
       hospitalizaciones: "Una a los 8 meses por bronquiolitis (3 días).",
-      perinatales: {
-        tipoParto: "cesarea",
-        pesoNacerKg: 3.2,
-        tallaNacerCm: 49,
-        semanasGestacion: 38,
-        lactancia: "Materna exclusiva 4 meses, luego fórmula extensamente hidrolizada.",
-      },
+      tieneAlergias: true,
+      alergias: "Proteína de leche de vaca.",
+      familiares: "Madre con atopia. Tío materno con enfermedad inflamatoria intestinal (Crohn).",
+    },
+    perinatal: {
+      tipoParto: "cesarea",
+      semanasGestacion: 38,
+      pesoNacerKg: 3.2,
+      tallaNacerCm: 49,
+      complicacionesParto: false,
+      complicacionesDetalle: "",
+      lactanciaMaterna: true,
+      lactancia: "Materna exclusiva 4 meses, luego fórmula extensamente hidrolizada.",
+      ablactacionMeses: 6,
+      desarrolloAcorde: true,
+      hitos: "Sostén cefálico 3 m · sedestación 6 m · marcha 13 m · primeras palabras 12 m.",
+      esquemaCompleto: true,
+      vacunasNotas: "Al día según el esquema nacional; influenza estacional aplicada.",
     },
     antropometria: [
       { fecha: "2026-04-22", pesoKg: 12.4, tallaCm: 92, imc: 14.6, percentilPeso: "p25" },
@@ -549,15 +670,29 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       bristolEscala: 4,
       frecuenciaSemanal: 7,
       dolorDefecar: false,
+      dolorDefecarDetalle: "",
       sangrado: false,
+      sangradoDetalle: "",
       distension: "Ocasional, postprandial",
       reflujo: "Reflujo silencioso ocasional",
+      dolorAbdominal: false,
+      dolorAbdominalDetalle: "",
+      estrenimiento: false,
+      estrenimientoDetalle: "",
+      diarrea: false,
+      diarreaDetalle: "",
+      nauseaVomito: false,
+      nauseaVomitoDetalle: "",
+      pirosis: true,
+      pirosisDetalle: "Regurgitaciones ocasionales tras tomas grandes; sin pérdida de peso.",
+      sintomasNotas: "Buen estado general; se indica fraccionar tomas y vigilar curva ponderal.",
     },
     alimentacion: {
       comidasPorDia: 5,
       dietaEspecial: "Sin proteína de leche de vaca",
       alimentosPreferidos: ["Pollo", "Arroz", "Manzana"],
       alimentosRechazados: ["Vegetales de hoja verde"],
+      apetito: "bueno",
     },
     vacunas: [
       { nombre: "BCG", fecha: "2022-04-13" },
@@ -570,31 +705,46 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       {
         nombre: "Marisol Aguirre",
         relacion: "madre",
-        telefono: "+52 55 4729 1834",
-        email: "marisol.aguirre@correo.mx",
+        telefono: "+506 8729-1834",
+        email: "marisol.aguirre@correo.cr",
         principal: true,
       },
       {
         nombre: "Daniel Pérez",
         relacion: "padre",
-        telefono: "+52 55 6118 8472",
+        telefono: "+506 7118-8472",
         principal: false,
       },
     ],
   },
   "p-002": {
     antecedentes: {
-      familiares: "Padre con celiaquía. Abuela materna con tiroiditis autoinmune.",
-      alergias: "Ninguna conocida.",
+      padeceEnfermedad: true,
+      cualEnfermedad: "Enfermedad celíaca confirmada por biopsia (2024).",
+      tomaMedicamentos: false,
+      cualMedicamento: "",
+      haSidoOperado: false,
       cirugias: "Ninguna.",
+      haSidoHospitalizado: false,
       hospitalizaciones: "Ninguna.",
-      perinatales: {
-        tipoParto: "vaginal",
-        pesoNacerKg: 3.5,
-        tallaNacerCm: 51,
-        semanasGestacion: 40,
-        lactancia: "Materna exclusiva 6 meses.",
-      },
+      tieneAlergias: false,
+      alergias: "Ninguna conocida.",
+      familiares: "Padre con celiaquía. Abuela materna con tiroiditis autoinmune.",
+    },
+    perinatal: {
+      tipoParto: "vaginal",
+      semanasGestacion: 40,
+      pesoNacerKg: 3.5,
+      tallaNacerCm: 51,
+      complicacionesParto: false,
+      complicacionesDetalle: "",
+      lactanciaMaterna: true,
+      lactancia: "Materna exclusiva 6 meses.",
+      ablactacionMeses: 6,
+      desarrolloAcorde: true,
+      hitos: "Desarrollo psicomotor dentro de lo esperado para la edad.",
+      esquemaCompleto: true,
+      vacunasNotas: "Esquema nacional completo; VPH en curso.",
     },
     antropometria: [
       { fecha: "2026-03-18", pesoKg: 33.5, tallaCm: 142, imc: 16.6, percentilPeso: "p40" },
@@ -605,44 +755,72 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       bristolEscala: 4,
       frecuenciaSemanal: 7,
       dolorDefecar: false,
+      dolorDefecarDetalle: "",
       sangrado: false,
+      sangradoDetalle: "",
       distension: "Ausente con dieta libre de gluten",
       reflujo: "Sin episodios",
+      dolorAbdominal: false,
+      dolorAbdominalDetalle: "",
+      estrenimiento: false,
+      estrenimientoDetalle: "",
+      diarrea: false,
+      diarreaDetalle: "",
+      nauseaVomito: false,
+      nauseaVomitoDetalle: "",
+      pirosis: false,
+      pirosisDetalle: "",
+      sintomasNotas: "Asintomática con adherencia estricta a la dieta sin gluten.",
     },
     alimentacion: {
       comidasPorDia: 4,
       dietaEspecial: "Estricta libre de gluten",
       alimentosPreferidos: ["Pasta de arroz", "Frutas", "Yogurt"],
       alimentosRechazados: [],
+      apetito: "bueno",
     },
     vacunas: [
-      { nombre: "Esquema completo cartilla mexicana", fecha: "2014-2024" },
+      { nombre: "Esquema nacional de vacunación completo", fecha: "2014-2024" },
       { nombre: "VPH (1ª dosis)", fecha: "2025-08-12", refuerzo: "2026-02-12" },
     ],
     tutores: [
       {
         nombre: "Iván Reyes",
         relacion: "padre",
-        telefono: "+52 55 6118 2247",
-        email: "ivan.reyes@correo.mx",
+        telefono: "+506 7118-2247",
+        email: "ivan.reyes@correo.cr",
         principal: true,
       },
     ],
   },
   "p-003": {
     antecedentes: {
-      familiares: "Hermano mayor con colitis ulcerosa.",
-      alergias: "Ninguna conocida.",
+      padeceEnfermedad: true,
+      cualEnfermedad: "Enfermedad de Crohn ileocolónica (2024), en evaluación para terapia biológica.",
+      tomaMedicamentos: true,
+      cualMedicamento: "Azatioprina; suplemento de hierro y vitamina D.",
+      haSidoOperado: true,
       cirugias: "Apendicectomía 2024.",
-      hospitalizaciones:
-        "Dos por brote de Crohn (2024 y 2025), control con biológico en evaluación.",
-      perinatales: {
-        tipoParto: "vaginal",
-        pesoNacerKg: 3.4,
-        tallaNacerCm: 50,
-        semanasGestacion: 39,
-        lactancia: "Materna 4 meses + fórmula.",
-      },
+      haSidoHospitalizado: true,
+      hospitalizaciones: "Dos internamientos por brote de Crohn (2024 y 2025).",
+      tieneAlergias: false,
+      alergias: "Ninguna conocida.",
+      familiares: "Hermano mayor con colitis ulcerosa.",
+    },
+    perinatal: {
+      tipoParto: "vaginal",
+      semanasGestacion: 39,
+      pesoNacerKg: 3.4,
+      tallaNacerCm: 50,
+      complicacionesParto: false,
+      complicacionesDetalle: "",
+      lactanciaMaterna: true,
+      lactancia: "Materna 4 meses + fórmula.",
+      ablactacionMeses: 5,
+      desarrolloAcorde: true,
+      hitos: "Desarrollo normal; leve enlentecimiento de talla (p35) durante los brotes.",
+      esquemaCompleto: true,
+      vacunasNotas: "Esquema completo; refuerzo de hepatitis A en 2024.",
     },
     antropometria: [
       { fecha: "2026-04-29", pesoKg: 52.8, tallaCm: 168, imc: 18.7, percentilPeso: "p35" },
@@ -653,18 +831,32 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       bristolEscala: 5,
       frecuenciaSemanal: 14,
       dolorDefecar: true,
+      dolorDefecarDetalle: "Molestia al defecar durante los brotes.",
       sangrado: true,
+      sangradoDetalle: "Sangre roja con moco en las deposiciones durante los brotes.",
       distension: "Frecuente, asociada a brotes",
       reflujo: "Ausente",
+      dolorAbdominal: true,
+      dolorAbdominalDetalle: "Cólico periumbilical, predominio postprandial.",
+      estrenimiento: false,
+      estrenimientoDetalle: "",
+      diarrea: true,
+      diarreaDetalle: "Hasta 4–6 deposiciones al día con moco durante los brotes.",
+      nauseaVomito: false,
+      nauseaVomitoDetalle: "",
+      pirosis: false,
+      pirosisDetalle: "",
+      sintomasNotas: "Astenia asociada a los brotes; en control con hematología por anemia.",
     },
     alimentacion: {
       comidasPorDia: 4,
       dietaEspecial: "Baja en lactosa y residuos durante brotes",
       alimentosPreferidos: ["Arroz", "Pollo a la plancha", "Plátano"],
       alimentosRechazados: ["Lácteos enteros", "Granos integrales"],
+      apetito: "regular",
     },
     vacunas: [
-      { nombre: "Esquema completo cartilla mexicana", fecha: "2008-2018" },
+      { nombre: "Esquema nacional de vacunación completo", fecha: "2008-2018" },
       { nombre: "Influenza anual", fecha: "2025-11-04" },
       { nombre: "Hepatitis A refuerzo", fecha: "2024-09-15" },
     ],
@@ -672,14 +864,14 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
       {
         nombre: "Patricia Krauss",
         relacion: "madre",
-        telefono: "+52 55 8472 9136",
-        email: "patricia.k@correo.mx",
+        telefono: "+506 6472-9136",
+        email: "patricia.k@correo.cr",
         principal: true,
       },
       {
         nombre: "Esteban Patiño",
         relacion: "padre",
-        telefono: "+52 55 1845 9072",
+        telefono: "+506 7845-9072",
         principal: false,
       },
     ],
@@ -688,32 +880,61 @@ export const expedientesMock: Record<string, ExpedienteMock> = {
 
 export const expedienteDefault: ExpedienteMock = {
   antecedentes: {
-    familiares: "",
-    alergias: "",
+    padeceEnfermedad: null,
+    cualEnfermedad: "",
+    tomaMedicamentos: null,
+    cualMedicamento: "",
+    haSidoOperado: null,
     cirugias: "",
+    haSidoHospitalizado: null,
     hospitalizaciones: "",
-    perinatales: {
-      tipoParto: "no_especificado",
-      pesoNacerKg: 0,
-      tallaNacerCm: 0,
-      semanasGestacion: 0,
-      lactancia: "",
-    },
+    tieneAlergias: null,
+    alergias: "",
+    familiares: "",
+  },
+  perinatal: {
+    tipoParto: "no_especificado",
+    semanasGestacion: 0,
+    pesoNacerKg: 0,
+    tallaNacerCm: 0,
+    complicacionesParto: null,
+    complicacionesDetalle: "",
+    lactanciaMaterna: null,
+    lactancia: "",
+    ablactacionMeses: 0,
+    desarrolloAcorde: null,
+    hitos: "",
+    esquemaCompleto: null,
+    vacunasNotas: "",
   },
   antropometria: [],
   habitoDigestivo: {
     bristolEscala: 4,
     frecuenciaSemanal: 0,
     dolorDefecar: false,
+    dolorDefecarDetalle: "",
     sangrado: false,
+    sangradoDetalle: "",
     distension: "",
     reflujo: "",
+    dolorAbdominal: null,
+    dolorAbdominalDetalle: "",
+    estrenimiento: null,
+    estrenimientoDetalle: "",
+    diarrea: null,
+    diarreaDetalle: "",
+    nauseaVomito: null,
+    nauseaVomitoDetalle: "",
+    pirosis: null,
+    pirosisDetalle: "",
+    sintomasNotas: "",
   },
   alimentacion: {
     comidasPorDia: 0,
     dietaEspecial: "",
     alimentosPreferidos: [],
     alimentosRechazados: [],
+    apetito: "",
   },
   vacunas: [],
   tutores: [],
@@ -722,15 +943,55 @@ export const expedienteDefault: ExpedienteMock = {
 export type SignosVitalesMock = {
   pa?: string;
   fc?: string;
+  fr?: string;
+  satO2?: string;
+  temperatura?: number;
   pesoKg?: number;
   tallaCm?: number;
-  temperatura?: number;
+  perimetroCefalicoCm?: number;
   imc?: number;
+  percentilPeso?: string;
+  percentilTalla?: string;
+  percentilImc?: string;
 };
 
 export type ExploracionFisicaMock = {
-  abdomen?: string;
   general?: string;
+  orofaringe?: string;
+  cardiopulmonar?: string;
+  abdomen?: string;
+  piel?: string;
+  neurologico?: string;
+};
+
+/** Tipos de consulta pediátrica que ofrecen las tarjetas del modal. */
+export type TipoConsulta = "general" | "nino_sano" | "seguimiento" | "endoscopia";
+
+/** Hábito registrado por consulta: chip Sí/No + notas descriptivas. */
+export type HabitoEntry = { tiene: TriState; notas: string };
+
+export type HabitosConsultaMock = {
+  alimentacion: HabitoEntry;
+  sueno: HabitoEntry;
+  actividadFisica: HabitoEntry;
+  pantallas: HabitoEntry;
+  habitoIntestinal: HabitoEntry;
+  hidratacion: HabitoEntry;
+  tabacoVapeo: HabitoEntry;
+  alcohol: HabitoEntry;
+  cafeina: HabitoEntry;
+};
+
+/** Hallazgos de endoscopía / procedimiento digestivo. */
+export type EndoscopiaMock = {
+  indicacion: string;
+  esofago: string;
+  estomago: string;
+  duodeno: string;
+  colonIleon: string;
+  biopsias: string;
+  impresion: string;
+  sedacionTolerancia: string;
 };
 
 export type ConsultaMock = {
@@ -738,6 +999,7 @@ export type ConsultaMock = {
   pacienteId: string;
   fecha: string;
   servicioSlug: string;
+  tipoConsulta?: TipoConsulta;
   motivo: string;
   notas: string;
   diagnosticos: string[];
@@ -749,9 +1011,45 @@ export type ConsultaMock = {
   resultadosLaboratorio?: string;
   signosVitales?: SignosVitalesMock;
   exploracionFisica?: ExploracionFisicaMock;
+  habitos?: HabitosConsultaMock;
+  // Campos específicos por tipo de consulta
+  desarrolloNotas?: string; // Control de niño sano
+  alimentacionNotas?: string; // Control de niño sano
+  tamizajesNotas?: string; // Control de niño sano
+  evolucionNotas?: string; // Seguimiento
+  adherenciaNotas?: string; // Seguimiento
+  endoscopia?: EndoscopiaMock; // Endoscopía / procedimiento
   planTratamiento?: string;
   notasAdicionales?: string;
 };
+
+export const emptyHabitosConsulta = (): HabitosConsultaMock => ({
+  alimentacion: { tiene: null, notas: "" },
+  sueno: { tiene: null, notas: "" },
+  actividadFisica: { tiene: null, notas: "" },
+  pantallas: { tiene: null, notas: "" },
+  habitoIntestinal: { tiene: null, notas: "" },
+  hidratacion: { tiene: null, notas: "" },
+  tabacoVapeo: { tiene: null, notas: "" },
+  alcohol: { tiene: null, notas: "" },
+  cafeina: { tiene: null, notas: "" },
+});
+
+export const emptyEndoscopia = (): EndoscopiaMock => ({
+  indicacion: "",
+  esofago: "",
+  estomago: "",
+  duodeno: "",
+  colonIleon: "",
+  biopsias: "",
+  impresion: "",
+  sedacionTolerancia: "",
+});
+
+/** Categoría del adjunto según el menú "Subir archivo". */
+export type ArchivoTipo = "documento" | "endoscopia" | "dibujo";
+
+export const MAX_IMAGENES_ENDOSCOPIA = 5;
 
 export type ArchivoMock = {
   id: string;
@@ -762,6 +1060,8 @@ export type ArchivoMock = {
   /** Data URL (base64). En migración a Supabase reemplazar por `path` + signed URL. */
   data: string;
   subidoEn: string;
+  /** Tipo de adjunto: documento (por defecto), imagen de endoscopía o imagen anotada. */
+  tipo?: ArchivoTipo;
 };
 
 export type NotaBitacoraMock = {
@@ -779,14 +1079,49 @@ export const consultasMock: ConsultaMock[] = [
     pacienteId: "p-001",
     fecha: at(-7, 10),
     servicioSlug: "consulta-gastro",
+    tipoConsulta: "general",
     motivo: "Vómito post-toma persistente, irritabilidad nocturna.",
+    acompanante: "Madre (Marisol Aguirre)",
+    enfermedadActual:
+      "Vómitos posprandiales desde hace 3 semanas, 4–5 al día, no biliosos ni proyectiles. Arqueo e irritabilidad nocturna. Sin fiebre ni diarrea; buena diuresis y ganancia ponderal.",
     notas:
       "Lactante con cuadro compatible con ERGE + APLV. Continúa con fórmula extensamente hidrolizada y omeprazol. Adecuada ganancia ponderal en últimas 6 semanas. Se programa pH-metría 24h para confirmar reflujo ácido nocturno.",
+    signosVitales: {
+      fc: "128 lpm",
+      fr: "32 rpm",
+      satO2: "98 %",
+      temperatura: 36.7,
+      pesoKg: 12.4,
+      tallaCm: 92,
+      perimetroCefalicoCm: 48,
+      imc: 14.6,
+      percentilPeso: "p25",
+    },
+    exploracionFisica: {
+      general: "Activo, reactivo, bien hidratado y perfundido.",
+      abdomen: "Blando, depresible, sin masas ni visceromegalias; ruidos presentes.",
+    },
+    habitos: {
+      alimentacion: {
+        tiene: true,
+        notas: "Fórmula extensamente hidrolizada, 5 tomas/día; sin lácteos.",
+      },
+      sueno: { tiene: false, notas: "Despertares nocturnos por reflujo." },
+      actividadFisica: { tiene: null, notas: "" },
+      pantallas: { tiene: null, notas: "" },
+      habitoIntestinal: { tiene: true, notas: "1 deposición/día, blanda, sin sangre." },
+      hidratacion: { tiene: true, notas: "Adecuada según tomas." },
+      tabacoVapeo: { tiene: null, notas: "" },
+      alcohol: { tiene: null, notas: "" },
+      cafeina: { tiene: null, notas: "" },
+    },
     diagnosticos: ["ERGE del lactante", "APLV"],
     procedimientosOrdenados: ["pH-metría 24h"],
     medicamentosRecetados: [
       { nombre: "Omeprazol", dosis: "5 mg", frecuencia: "1 vez/día" },
     ],
+    planTratamiento:
+      "Mantener fórmula hidrolizada y omeprazol. Medidas antirreflujo. pH-metría 24h. Control en 6 semanas.",
     duracionMin: 60,
   },
   {
@@ -794,14 +1129,41 @@ export const consultasMock: ConsultaMock[] = [
     pacienteId: "p-002",
     fecha: at(-30, 11, 30),
     servicioSlug: "seguimiento-cronico",
+    tipoConsulta: "seguimiento",
     motivo: "Control rutinario celiaquía, sin sintomatología.",
+    acompanante: "Padre (Iván Reyes)",
+    evolucionNotas:
+      "Asintomática desde el último control. Sin dolor abdominal ni distensión. Crecimiento en p35–40 estable.",
+    adherenciaNotas:
+      "Adherencia estricta a dieta libre de gluten; buen manejo en el colegio. Anti-tTG en descenso.",
     notas:
       "Adherencia estricta a dieta libre de gluten. Crecimiento adecuado. Anticuerpos anti-tTG en descenso. Mantener controles cada 6 meses.",
+    signosVitales: {
+      pa: "104/66",
+      fc: "84 lpm",
+      temperatura: 36.5,
+      pesoKg: 33.5,
+      tallaCm: 142,
+      imc: 16.6,
+      percentilPeso: "p40",
+    },
+    habitos: {
+      alimentacion: { tiene: true, notas: "Dieta libre de gluten, variada." },
+      sueno: { tiene: true, notas: "8–9 h/noche, horario regular." },
+      actividadFisica: { tiene: true, notas: "Natación 2 veces/semana." },
+      pantallas: { tiene: true, notas: "~2 h/día." },
+      habitoIntestinal: { tiene: true, notas: "Diaria, Bristol 4." },
+      hidratacion: { tiene: true, notas: "Adecuada." },
+      tabacoVapeo: { tiene: false, notas: "" },
+      alcohol: { tiene: false, notas: "" },
+      cafeina: { tiene: false, notas: "" },
+    },
     diagnosticos: ["Celiaquía"],
     procedimientosOrdenados: [],
     medicamentosRecetados: [
       { nombre: "Multivitamínico pediátrico", dosis: "1 tableta", frecuencia: "1 vez/día" },
     ],
+    planTratamiento: "Continuar dieta sin gluten. Control con anti-tTG en 6 meses.",
     duracionMin: 30,
   },
   {
@@ -809,14 +1171,77 @@ export const consultasMock: ConsultaMock[] = [
     pacienteId: "p-003",
     fecha: at(-3, 16),
     servicioSlug: "consulta-gastro",
+    tipoConsulta: "general",
     motivo: "Aumento de evacuaciones con sangre, dolor abdominal.",
+    acompanante: "Madre (Patricia Krauss)",
+    enfermedadActual:
+      "Hace 10 días, aumento a 5–6 evacuaciones/día con moco y sangre, dolor cólico periumbilical y astenia. Sin fiebre. Pérdida de 1 kg.",
     notas:
       "Posible brote moderado de enfermedad de Crohn. Calprotectina fecal solicitada. Considerar ajuste de mesalazina y discutir biológico en próxima consulta. Indicada dieta baja en residuos temporal.",
+    signosVitales: {
+      pa: "108/68",
+      fc: "92 lpm",
+      temperatura: 37.1,
+      pesoKg: 52.8,
+      tallaCm: 168,
+      imc: 18.7,
+      percentilPeso: "p35",
+    },
+    exploracionFisica: {
+      general: "Palidez leve de mucosas; hidratado.",
+      abdomen: "Dolor a la palpación en fosa iliaca derecha; sin rebote ni masas.",
+    },
+    habitos: {
+      alimentacion: { tiene: true, notas: "Dieta baja en lactosa y residuos durante brotes." },
+      sueno: { tiene: true, notas: "Interrumpido por dolor durante brotes." },
+      actividadFisica: { tiene: false, notas: "Reducida por astenia." },
+      pantallas: { tiene: true, notas: "~3 h/día." },
+      habitoIntestinal: { tiene: false, notas: "5–6 deposiciones/día con moco y sangre." },
+      hidratacion: { tiene: true, notas: "Adecuada." },
+      tabacoVapeo: { tiene: false, notas: "" },
+      alcohol: { tiene: false, notas: "" },
+      cafeina: { tiene: true, notas: "1 bebida energética ocasional; se recomienda evitar." },
+    },
     diagnosticos: ["Enfermedad de Crohn"],
     procedimientosOrdenados: ["Colonoscopía de control", "Calprotectina fecal"],
     medicamentosRecetados: [
       { nombre: "Mesalazina", dosis: "800 mg", frecuencia: "3 veces/día" },
     ],
+    planTratamiento:
+      "Dieta baja en residuos. Ajustar mesalazina. Colonoscopía y calprotectina. Valorar biológico en control.",
+    duracionMin: 60,
+  },
+  {
+    id: "co-004",
+    pacienteId: "p-003",
+    fecha: at(-1, 9),
+    servicioSlug: "colonoscopia",
+    tipoConsulta: "endoscopia",
+    motivo: "Colonoscopía de control por brote de enfermedad de Crohn.",
+    acompanante: "Madre (Patricia Krauss)",
+    notas:
+      "Colonoscopía completa hasta íleon terminal bajo sedación. Hallazgos compatibles con actividad inflamatoria ileocolónica. Biopsias escalonadas enviadas a patología.",
+    endoscopia: {
+      indicacion: "Reevaluación de actividad inflamatoria en enfermedad de Crohn conocida.",
+      esofago: "No evaluado en este procedimiento.",
+      estomago: "No evaluado en este procedimiento.",
+      duodeno: "No evaluado en este procedimiento.",
+      colonIleon:
+        "Íleon terminal con aftas y eritema parcheado. Colon con úlceras superficiales segmentarias y patrón en empedrado en colon derecho; recto respetado.",
+      biopsias: "Escalonadas de íleon, colon derecho, transverso, izquierdo y recto (10 frascos).",
+      impresion: "Actividad inflamatoria ileocolónica moderada, compatible con Crohn.",
+      sedacionTolerancia: "Sedación consciente; buena tolerancia, sin complicaciones inmediatas.",
+    },
+    signosVitales: {
+      fc: "88 lpm",
+      satO2: "99 %",
+      temperatura: 36.6,
+    },
+    diagnosticos: ["Enfermedad de Crohn ileocolónica activa"],
+    procedimientosOrdenados: ["Biopsias escalonadas"],
+    medicamentosRecetados: [],
+    planTratamiento:
+      "Esperar histología. Escalar terapia según resultado (valorar biológico). Control en 2 semanas.",
     duracionMin: 60,
   },
 ];

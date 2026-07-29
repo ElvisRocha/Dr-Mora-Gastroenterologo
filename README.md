@@ -59,9 +59,9 @@ npm run dev                # http://localhost:5173
 El proyecto funciona **out of the box sin Supabase ni n8n**:
 
 - `useAuth` cae a un store local con tres usuarios precargados:
-  - `admin@gastrokids.mx` · `admin123`
-  - `dr.mora@gastrokids.mx` · `doctor123`
-  - `secretaria@gastrokids.mx` · `sec123`
+  - `admin@gastrokids.cr` · `admin123`
+  - `dr.mora@gastrokids.cr` · `doctor123`
+  - `secretaria@gastrokids.cr` · `sec123`
 - `useDisponibilidad` y `useAgendarCita` retornan slots/respuesta mock cuando los
   webhooks n8n no están configurados.
 - Los pacientes y citas en el dashboard se leen de `src/lib/mock.ts`.
@@ -79,11 +79,47 @@ VITE_N8N_WEBHOOK_DISPONIBILIDAD=
 VITE_N8N_WEBHOOK_ACTUALIZAR=
 VITE_N8N_WEBHOOK_SEGUIMIENTO=
 VITE_DEFAULT_LANG=es
-VITE_TIMEZONE=America/Mexico_City
+VITE_TIMEZONE=America/Costa_Rica
 ```
 
 Las claves sensibles **GHL_API_KEY**, **SUPABASE_SERVICE_ROLE_KEY** y los IDs
 de calendario se viven exclusivamente en n8n, nunca en el frontend.
+
+## Novedades — modo demo completo (sin backend)
+
+Esta versión replica, adaptadas al ámbito pediátrico-GI del Dr. Mora, las
+funcionalidades del consultorio hermano. **Todo funciona sin Supabase**: la data
+vive en `src/lib/data/*` y se persiste en `localStorage` mediante un store único
+(`src/store/clinicStore.tsx`, provisto en la raíz de la app). Editar una cita,
+enviar un mensaje o agendar desde el sitio se refleja en el panel al instante.
+
+Módulos del panel administrativo:
+
+| Módulo | Ruta | Qué muestra |
+|---|---|---|
+| **Dashboard** | `/admin/dashboard` | Métricas en vivo, agenda del día, actividad reciente, próximas citas |
+| **Conversaciones** | `/admin/conversaciones` | Bandeja unificada tipo WhatsApp/Instagram/Facebook: lista + hilo + ficha del paciente + vista tablero (kanban por estado). Asistente virtual "Gastrito" |
+| **Lista de espera** | `/admin/lista-espera` | Triage de prioridad, origen, reasignación de cupos liberados |
+| **Agenda** | `/admin/calendario` | Vistas día/semana/mes, bloqueos, indicador de hora actual, origen de cita, acciones (confirmar/cancelar/reagendar), agendar y bloquear inline |
+| **Expediente** | `/admin/pacientes/:id` | Timer de consulta + tabs (resumen, antecedentes, crecimiento, hábito digestivo, consultas, citas) |
+| **Configuración** | `/admin/configuracion` | Pestañas: consultorio, servicios (CRUD), horarios, accesos por rol |
+| **Campana** | (header) | Notificaciones con deep-link a conversaciones / lista de espera |
+
+Sitio público:
+
+- **Botón flotante de WhatsApp** en todas las páginas.
+- **Autogestión de citas** (FAB): reprogramar o cancelar con el código `GK-XXXXX`.
+- **Agendamiento en línea** que crea la cita en la agenda del panel + notificación.
+- **Frase inspiradora** al iniciar sesión (configurable).
+
+Credenciales demo (mock, sin backend):
+
+- `admin@gastrokids.cr` · `admin123` (admin)
+- `dr.mora@gastrokids.cr` · `doctor123` (doctor)
+- `secretaria@gastrokids.cr` · `sec123` (secretaría)
+
+> El estado de la demo se guarda en `localStorage`. Para reiniciarla desde cero,
+> el store expone `resetDemo()` (o borra la clave `gastrokids:clinic:v1`).
 
 ## Sistema de diseño
 
@@ -132,7 +168,7 @@ Crear el primer admin tras aplicar las migraciones:
 -- Sustituye <USER_ID> por el id de auth.users del admin recién creado
 insert into user_roles (user_id, rol) values ('<USER_ID>', 'admin');
 insert into profiles (id, nombre, email)
-values ('<USER_ID>', 'Admin Gastro Kids', 'admin@gastrokids.mx');
+values ('<USER_ID>', 'Admin Gastro Kids', 'admin@gastrokids.cr');
 ```
 
 ## Workflows n8n
@@ -170,7 +206,7 @@ VITE_N8N_WEBHOOK_SEGUIMIENTO=https://tu-n8n.com/webhook/seguimiento-paciente
 1. `npm install && npm run dev` → landing en `http://localhost:5173`.
 2. Toggle ES/EN en navbar → cambia copia.
 3. Click *Agendar cita* → wizard 4 pasos → confirmar → toast de éxito.
-4. `/admin/login` con `admin@gastrokids.mx / admin123` → dashboard.
+4. `/admin/login` con `admin@gastrokids.cr / admin123` → dashboard.
 5. `/admin/pacientes` → buscar "Lucía" → entrar al expediente con tabs.
 6. `/admin/calendario` → semana con 24 citas mock distribuidas.
 7. DevTools → emular `prefers-reduced-motion: reduce` → animaciones desactivadas.

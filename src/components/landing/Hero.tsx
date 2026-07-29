@@ -145,7 +145,7 @@ export function Hero() {
           >
             <img
               src={heroIlustracion}
-              alt="Atención pediátrica gastroenterología"
+              alt="Manos del médico registrando la consulta en la laptop, junto al estetoscopio"
               className="absolute inset-0 h-full w-full object-cover"
               loading="eager"
             />

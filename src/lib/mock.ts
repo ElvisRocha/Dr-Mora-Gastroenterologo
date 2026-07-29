@@ -4,6 +4,7 @@ import {
   registroParaSeed,
 } from "@/lib/data/generarPacientes";
 import { generarCitas } from "@/lib/data/generarCitas";
+import landingHeroUrl from "@/assets/Landing.png";
 
 export type ServicioMock = {
   slug: string;
@@ -178,8 +179,7 @@ export const galeriaMock: GaleriaItem[] = [
 
 export const galeriaDestacada = galeriaMock.slice(0, 4);
 
-export const heroIlustracion =
-  "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=900&h=1100&fit=crop&auto=format&q=80";
+export const heroIlustracion = landingHeroUrl;
 
 export const doctorPortrait =
   "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=640&h=800&fit=crop&auto=format&q=80";
